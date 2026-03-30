@@ -1,88 +1,7 @@
-import { create } from 'zustand';import { create } from 'zustand';
+'use client';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-}));  setSelectedMeeting: (meeting: Meeting | null) => set({ selectedMeeting: meeting }),  },    }      throw error;      set({ error: (error as Error).message });    } catch (error) {      }));        selectedMeeting: state.selectedMeeting?.id === id ? null : state.selectedMeeting,        meetings: state.meetings.filter((m) => m.id !== id),      set((state) => ({      await meetingsService.deleteMeeting(id);    try {  deleteMeeting: async (id: string) => {  },    }      throw error;      set({ error: (error as Error).message });    } catch (error) {      return meeting;      }));        selectedMeeting: state.selectedMeeting?.id === id ? meeting : state.selectedMeeting,        meetings: state.meetings.map((m) => (m.id === id ? meeting : m)),      set((state) => ({      const meeting = await meetingsService.updateMeeting(id, updates as any);    try {  updateMeeting: async (id: string, updates: Partial<Meeting>) => {  },    }      throw error;      set({ error: (error as Error).message });    } catch (error) {      return meeting;      set((state) => ({ meetings: [...state.meetings, meeting] }));      const meeting = await meetingsService.createMeeting({ title, transcript, duration });    try {  createMeeting: async (title: string, transcript: string, duration: number) => {  },    }      set({ error: (error as Error).message, isLoading: false });    } catch (error) {      set({ selectedMeeting: meeting, isLoading: false });      const meeting = await meetingsService.getMeetingById(id);    try {    set({ isLoading: true, error: null });  fetchMeetingById: async (id: string) => {  },    }      set({ error: (error as Error).message, isLoading: false });    } catch (error) {      set({ meetings, isLoading: false });      const meetings = await meetingsService.getMeetings();    try {    set({ isLoading: true, error: null });  fetchMeetings: async () => {  error: null,  isLoading: false,  selectedMeeting: null,  meetings: [],export const useMeetingsStore = create<MeetingsStore>((set) => ({}  setSelectedMeeting: (meeting: Meeting | null) => void;  deleteMeeting: (id: string) => Promise<void>;  updateMeeting: (id: string, updates: Partial<Meeting>) => Promise<Meeting>;  createMeeting: (title: string, transcript: string, duration: number) => Promise<Meeting>;  fetchMeetingById: (id: string) => Promise<void>;  fetchMeetings: () => Promise<void>;  error: string | null;  isLoading: boolean;  selectedMeeting: Meeting | null;  meetings: Meeting[];interface MeetingsStore {import { meetingsService } from '@/services/meetings.api';import { Meeting } from '@/types';import { FlashcardDeck } from '@/types';
+import { create } from 'zustand';
+import { FlashcardDeck } from '@/types';
 import { flashcardsService } from '@/services/flashcards.api';
 
 interface FlashcardStore {
@@ -105,8 +24,8 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
   error: null,
 
   fetchDecks: async () => {
-    set({ isLoading: true, error: null });
     try {
+      set({ isLoading: true, error: null });
       const decks = await flashcardsService.getDecks();
       set({ decks, isLoading: false });
     } catch (error) {
@@ -115,8 +34,8 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
   },
 
   fetchDeckById: async (id: string) => {
-    set({ isLoading: true, error: null });
     try {
+      set({ isLoading: true, error: null });
       const deck = await flashcardsService.getDeckById(id);
       set({ selectedDeck: deck, isLoading: false });
     } catch (error) {
@@ -126,6 +45,7 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
 
   createDeck: async (title: string, description?: string) => {
     try {
+      set({ error: null });
       const deck = await flashcardsService.createDeck({ title, description });
       set((state) => ({ decks: [...state.decks, deck] }));
       return deck;
@@ -137,6 +57,7 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
 
   updateDeck: async (id: string, updates: Partial<FlashcardDeck>) => {
     try {
+      set({ error: null });
       const deck = await flashcardsService.updateDeck(id, updates as any);
       set((state) => ({
         decks: state.decks.map((d) => (d.id === id ? deck : d)),
@@ -151,6 +72,7 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
 
   deleteDeck: async (id: string) => {
     try {
+      set({ error: null });
       await flashcardsService.deleteDeck(id);
       set((state) => ({
         decks: state.decks.filter((d) => d.id !== id),

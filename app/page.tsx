@@ -109,12 +109,12 @@ export default function Home() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button className="hidden rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition hover:text-slate-950 sm:inline-flex">
+            <Link href="/login" className="hidden rounded-full px-4 py-2 text-sm font-semibold text-slate-700 transition hover:text-slate-950 sm:inline-flex">
               Login
-            </button>
-            <button className="rounded-full bg-[#2f5dff] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(47,93,255,0.35)] transition hover:bg-[#284de1]">
+            </Link>
+            <Link href="/register" className="rounded-full bg-[#2f5dff] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_26px_rgba(47,93,255,0.35)] transition hover:bg-[#284de1]">
               Sign Up
-            </button>
+            </Link>
           </div>
         </div>
       </header>
@@ -139,9 +139,9 @@ export default function Home() {
               </p>
 
               <div className="flex flex-wrap gap-3 pt-2">
-                <button className="rounded-full bg-[#2f5dff] px-7 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(47,93,255,0.35)] transition hover:-translate-y-0.5 hover:bg-[#284de1]">
+                <Link href="/register" className="rounded-full bg-[#2f5dff] px-7 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(47,93,255,0.35)] transition hover:-translate-y-0.5 hover:bg-[#284de1] inline-block">
                   Get Started
-                </button>
+                </Link>
                 <button className="rounded-full border border-white/30 bg-white/10 px-7 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20 hover:border-white/50">
                   Watch Demo
                 </button>
@@ -422,7 +422,9 @@ export default function Home() {
       <footer id="about" className="scroll-mt-24 border-t border-slate-200 bg-white/80">
         <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 md:grid-cols-4 md:px-10">
           <div className="md:col-span-2">
-            <p className="text-2xl [font-family:var(--font-heading)]">StudySnap</p>
+            <a className="text-2xl [font-family:var(--font-heading)]" href="/">
+              StudySnap
+            </a>
             <p className="mt-3 max-w-sm text-sm text-slate-600">
               Build stronger study habits with AI support that keeps your notes,
               meetings, and revision cards in one place.

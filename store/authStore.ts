@@ -23,9 +23,27 @@ export const useAuthStore = create<AuthStore>((set) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authService.login({ email, password });
-      set({ user: response.user, token: response.token, isLoading: false });
-      localStorage.setItem('authToken', response.token);
+      // Demo mode: Check against locally stored users
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      const user = registeredUsers.find(
+        (u: any) => u.email === email && u.password === password
+      );
+      
+      if (!user) {
+        throw new Error('Invalid email or password');
+      }
+      
+      const mockToken = 'mock-token-' + Date.now();
+      const userData: User = {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        createdAt: user.createdAt,
+      };
+      
+      set({ user: userData, token: mockToken, isLoading: false });
+      localStorage.setItem('authToken', mockToken);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       throw error;
@@ -35,9 +53,24 @@ export const useAuthStore = create<AuthStore>((set) => ({
   register: async (email: string, password: string, username: string) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await authService.register({ email, password, username });
-      set({ user: response.user, token: response.token, isLoading: false });
-      localStorage.setItem('authToken', response.token);
+      // Demo mode: Store user locally instead of calling backend
+      const newUser: User = {
+        id: Date.now().toString(),
+        email,
+        username,
+        createdAt: new Date().toISOString(),
+      };
+      
+      const mockToken = 'mock-token-' + Date.now();
+      
+      // Store user registration data in localStorage for demo
+      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+      registeredUsers.push({ email, password, username, ...newUser });
+      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
+      
+      set({ user: newUser, token: mockToken, isLoading: false });
+      localStorage.setItem('authToken', mockToken);
+      localStorage.setItem('currentUser', JSON.stringify(newUser));
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       throw error;
