@@ -28,8 +28,8 @@ export default function ForgotPasswordPage() {
           <div className="text-center">
             {/* Lock Icon */}
             <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-                <Lock size={32} className="text-red-500" />
+              <div className="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center">
+                <Lock size={32} className="text-white" />
               </div>
             </div>
 
@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
                 {/* Submit Button */}
                 <Button 
                   type="submit"
-                  className="w-full py-2 px-4 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors"
+                  className="w-full py-2 px-4 bg-blue-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors"
                 >
                   Confirm
                 </Button>
