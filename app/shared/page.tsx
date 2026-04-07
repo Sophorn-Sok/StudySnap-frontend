@@ -1,14 +1,11 @@
-'use client';
-
-import FlashcardsPageContent from '@/components/flashcard/page';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
+import SharingPage from '@/components/shared/page';
 
-export default function FlashcardsPage() {
+export default function Page() {
   return (
     <DashboardLayout sidebar={<Sidebar />}>
-      <FlashcardsPageContent />
+      <SharingPage />
     </DashboardLayout>
   );
 }
-

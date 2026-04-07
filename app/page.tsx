@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { Manrope, Playfair_Display } from "next/font/google";
-import { 
-  Mic, 
-  Folder, 
-  Zap, 
-  FileText, 
-  Search, 
-  History, 
-  Tag, 
-  ChevronDown, 
-  List, 
-  Code, 
-  Image as ImageIcon, 
-  Link as LinkIcon, 
-  MoreVertical, 
+import {
+  Mic,
+  Folder,
+  Zap,
+  FileText,
+  Search,
+  History,
+  Tag,
+  ChevronDown,
+  List,
+  Code,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  MoreVertical,
   Sparkles,
   Clock,
   FileUp,
@@ -40,7 +40,7 @@ const headingFont = Playfair_Display({
   variable: "--font-heading",
 });
 
-{/* Navbar links */}
+{/* Navbar links */ }
 const navLinks = [
   { label: "Features", href: "#features" },
   { label: "How It Works", href: "#how-it-works" },
@@ -84,50 +84,45 @@ const featureCards = [
   },
 ];
 
-{/* Plan and pricing Section */}
+{/* Plan and pricing Section */ }
 const plans = [
   {
     name: "Free",
     price: "$0",
     subtitle: "Get started with StudySnap",
-    cta: "Start Free",
+    cta: "Select Plan",
     featured: false,
     features: [
-      "50 notes/month",
-      "100 flashcards",
-      "3 meeting transcriptions/month",
-      "Basic search",
+      "Limited notes and flashcards",
+      "3 meeting transcriptions per month",
+      "Basic AI features",
     ],
   },
   {
     name: "Pro",
-    price: "$24",
+    price: "$9",
     subtitle: "For power students",
-    cta: "Choose Pro",
+    cta: "Selected",
     featured: true,
     badge: "Most Popular",
     features: [
-      "Unlimited everything",
-      "AI summaries",
+      "Unlimited notes and flashcards",
+      "Unlimited meeting transcription",
       "AI flashcard generation",
       "Advanced analytics",
-      "Export to PDF & Notion",
-      "Priority support",
     ],
   },
   {
     name: "Team",
-    price: "$99",
+    price: "$49",
     subtitle: "For teams and classrooms",
-    cta: "Contact Sales",
+    cta: "Select Plan",
     featured: false,
     features: [
       "All Pro features",
-      "Collaboration & shared workspaces",
-      "Admin tools & user management",
-      "Team analytics",
-      "Dedicated support",
-      "Custom integrations",
+      "Collaboration tools",
+      "Shared workspaces",
+      "Priority support",
     ],
   },
 ];
@@ -185,52 +180,52 @@ export default function Home() {
         </div>
       </header>
 
-        {/* Hero Section */}
-        <section className="relative w-full" style={{backgroundImage: "url('/Asset/meeting.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '600px'}}>
-          {/* Dark Overlay */}
-          <div className="absolute inset-0 bg-black/40" />
-          
-          {/* Content Container */}
-          <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-16 md:px-10 md:py-24">
-            <div className="flex flex-col justify-center space-y-7 max-w-2xl">
-              <p className="inline-flex w-fit rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-blue-700">
-                AI Study Workspace
-              </p>
-              <h1 className="text-4xl leading-tight text-white sm:text-5xl lg:text-6xl [font-family:var(--font-heading)]">
-                Study Smarter with AI-Powered Notes and Flashcards
-              </h1>
-              <p className="max-w-2xl text-base leading-7 text-white/90 sm:text-lg">
-                Turn recordings, documents, and lecture content into organized
-                study notes and memory-friendly flashcards in seconds.
-              </p>
+      {/* Hero Section */}
+      <section className="relative w-full" style={{ backgroundImage: "url('/Asset/meeting.jpg')", backgroundSize: 'cover', backgroundPosition: 'center', minHeight: '600px' }}>
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/40" />
 
-              <div className="flex flex-wrap gap-3 pt-2">
-                <Link href="/register" className="rounded-full bg-[#2f5dff] px-7 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(47,93,255,0.35)] transition hover:-translate-y-0.5 hover:bg-[#284de1] inline-block">
-                  Get Started
-                </Link>
-                <button className="rounded-full border border-white/30 bg-white/10 px-7 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20 hover:border-white/50">
-                  Watch Demo
-                </button>
-              </div>
+        {/* Content Container */}
+        <div className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 py-16 md:px-10 md:py-24">
+          <div className="flex flex-col justify-center space-y-7 max-w-2xl">
+            <p className="inline-flex w-fit rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.15em] text-blue-700">
+              AI Study Workspace
+            </p>
+            <h1 className="text-4xl leading-tight text-white sm:text-5xl lg:text-6xl [font-family:var(--font-heading)]">
+              Study Smarter with AI-Powered Notes and Flashcards
+            </h1>
+            <p className="max-w-2xl text-base leading-7 text-white/90 sm:text-lg">
+              Turn recordings, documents, and lecture content into organized
+              study notes and memory-friendly flashcards in seconds.
+            </p>
 
-              <p className="text-sm text-white/75 pt-2">
-                Trusted by students and professionals worldwide
-              </p>
+            <div className="flex flex-wrap gap-3 pt-2">
+              <Link href="/register" className="rounded-full bg-[#2f5dff] px-7 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_rgba(47,93,255,0.35)] transition hover:-translate-y-0.5 hover:bg-[#284de1] inline-block">
+                Get Started
+              </Link>
+              <button className="rounded-full border border-white/30 bg-white/10 px-7 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20 hover:border-white/50">
+                Watch Demo
+              </button>
             </div>
-          </div>
-        </section>
 
-        {/* Prove Section */}
-        <section className="mx-auto w-full max-w-6xl px-6 py-16 md:px-10 md:py-24">
-          <div className="grid gap-8 sm:grid-cols-3">
-            {stats.map((stat) => (
-              <div key={stat.value} className="text-center">
-                <p className="text-4xl font-semibold [font-family:var(--font-heading)] text-slate-900">{stat.value}</p>
-                <p className="mt-3 text-sm text-slate-600">{stat.label}</p>
-              </div>
-            ))}
+            <p className="text-sm text-white/75 pt-2">
+              Trusted by students and professionals worldwide
+            </p>
           </div>
-        </section>
+        </div>
+      </section>
+
+      {/* Prove Section */}
+      <section className="mx-auto w-full max-w-6xl px-6 py-16 md:px-10 md:py-24">
+        <div className="grid gap-8 sm:grid-cols-3">
+          {stats.map((stat) => (
+            <div key={stat.value} className="text-center">
+              <p className="text-4xl font-semibold [font-family:var(--font-heading)] text-slate-900">{stat.value}</p>
+              <p className="mt-3 text-sm text-slate-600">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Features Section */}
       <section
@@ -282,12 +277,12 @@ export default function Home() {
           <div className="rounded-2xl border border-slate-200 bg-white shadow-[0_14px_36px_rgba(15,23,42,0.08)] hover:shadow-[0_20px_45px_rgba(15,23,42,0.12)] transition-shadow duration-300 overflow-hidden">
             {/* Image Section */}
             <div className="relative h-72 bg-gradient-to-b from-slate-200 to-slate-100 flex items-center justify-center overflow-hidden">
-              <div 
+              <div
                 className="absolute inset-0 bg-cover bg-center"
-                style={{backgroundImage: "url('/Asset/meeting transcript.jpg')"}}
+                style={{ backgroundImage: "url('/Asset/meeting transcript.jpg')" }}
               />
               <div className="absolute inset-0 bg-black/30" />
-              
+
               {/* Live Indicator Badge */}
               <div className="absolute top-4 left-4 z-10 inline-flex items-center gap-2 rounded-full bg-green-50/95 backdrop-blur px-3 py-1.5 border border-green-200">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
@@ -498,7 +493,7 @@ export default function Home() {
               <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-5 [font-family:var(--font-heading)] max-w-lg tracking-tight">
                 Software Engineering Lecture
               </h1>
-              
+
               <div className="flex items-center gap-3 mb-8">
                 <span className="px-2.5 py-1 rounded bg-slate-100 text-slate-600 text-xs font-semibold">
                   Topic
@@ -639,7 +634,7 @@ export default function Home() {
           <div className="relative w-full h-[650px] bg-[#f8fafc] rounded-[32px] overflow-hidden">
             {/* Background gradient blur */}
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[70%] h-[70%] bg-[#eeecff] rounded-full blur-[100px] opacity-60"></div>
-            
+
             {/* Floating element 1: Progress - Bottom Left */}
             <Card className="absolute left-6 bottom-32 w-40 !bg-white !rounded-2xl !p-5 !shadow-[0_12px_40px_rgba(0,0,0,0.1)] z-30">
               <div className="flex items-center gap-2.5 mb-4">
@@ -701,17 +696,17 @@ export default function Home() {
                 <div className="absolute top-8 px-5 py-1.5 bg-[#f0f4ff] border border-[#e0e7ff] rounded-full text-[10px] font-bold text-[#6366f1] uppercase tracking-[0.18em]">
                   Question
                 </div>
-                
+
                 <h3 className="text-[32px] font-semibold text-center text-slate-900 leading-[1.3] mt-4 px-3">
                   What is <span className="text-[#5352ff]">Agile methodology</span>?
                 </h3>
-                
+
                 <div className="absolute bottom-8 flex items-center gap-2.5 text-slate-400 text-[13px] font-medium cursor-pointer hover:text-slate-600 transition-colors">
                   <RotateCw className="w-4 h-4" />
                   <span>Click to flip</span>
                 </div>
               </Card>
-              
+
               {/* Bottom Buttons - Absolutely positioned below card */}
               <div className="absolute bottom-24 flex gap-3">
                 <Button variant="secondary" className="!px-8 !py-2.5 !bg-white !rounded-full border border-slate-200 shadow-[0_8px_24px_rgb(0,0,0,0.05)] text-[14px] !font-semibold !text-slate-700 hover:-translate-y-1 hover:shadow-[0_12px_32px_rgb(0,0,0,0.1)] transition-all duration-200">
@@ -759,11 +754,10 @@ export default function Home() {
           {plans.map((plan) => (
             <Card
               key={plan.name}
-              className={`relative flex flex-col h-full !rounded-[24px] !p-6 sm:!p-8 transition-all duration-300 ${
-                plan.featured
+              className={`relative flex flex-col h-full !rounded-[24px] !p-6 sm:!p-8 transition-all duration-300 ${plan.featured
                   ? "!border-indigo-600 !bg-indigo-50 ring-2 ring-indigo-500/20 shadow-lg hover:shadow-xl"
                   : "!border-slate-200 !bg-white hover:!shadow-[0_12px_40px_rgba(0,0,0,0.08)]"
-              }`}
+                }`}
             >
               {/* Badge */}
               {plan.badge && (
@@ -802,9 +796,8 @@ export default function Home() {
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className={`text-sm leading-relaxed ${
-                        plan.featured ? "text-slate-700" : "text-slate-600"
-                      }`}>
+                      <span className={`text-sm leading-relaxed ${plan.featured ? "text-slate-700" : "text-slate-600"
+                        }`}>
                         {feature}
                       </span>
                     </li>
@@ -814,11 +807,10 @@ export default function Home() {
 
               {/* CTA Button */}
               <Button
-                className={`w-full !rounded-full !py-3 !font-semibold text-sm transition-all ${
-                  plan.featured
+                className={`w-full !rounded-full !py-3 !font-semibold text-sm transition-all ${plan.featured
                     ? "!bg-indigo-600 !text-white hover:!bg-indigo-700 shadow-lg hover:shadow-xl"
                     : "!bg-slate-100 !text-slate-900 hover:!bg-slate-200"
-                }`}
+                  }`}
               >
                 {plan.cta}
               </Button>
