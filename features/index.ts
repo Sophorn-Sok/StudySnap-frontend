@@ -2,19 +2,18 @@
 // Centralized re-exports of all feature modules
 
 // Auth Feature
-export * as authFeature from './auth';
-
-// Notes Feature
-export * as notesFeature from './notes';
-
-// Flashcards Feature
-export * as flashcardsFeature from './flashcards';
+export * from './auth/types';
+export * from './auth/services/authService';
+export * from './auth/hooks/useAuthForm';
 
 // Meetings Feature
-export * as meetingsFeature from './meetings';
+export * from './meetings/types';
+export * from './meetings/services/meetingsService';
+export * from './meetings/hooks/useMeetingHistory';
 
 // AI Feature
-export * as aiFeature from './ai';
+export * from './ai/types';
+export * from './ai/services/aiService';
 
 // Search Feature
-export * as searchFeature from './search';
+export * from './search/services/searchService';
