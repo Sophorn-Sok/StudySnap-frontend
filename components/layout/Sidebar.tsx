@@ -3,72 +3,87 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/utils/constants';
-import { cn } from '@/lib/utils';
-import { LayoutDashboard, FileText, Layers2, Video, BarChart3, Share2, Tag, Settings } from 'lucide-react';
+import {
+  Sparkles,
+  LayoutDashboard,
+  FileText,
+  BrainCircuit,
+  Mic,
+  BarChart3,
+  Users,
+  CreditCard,
+  Settings,
+} from 'lucide-react';
+import clsx from 'clsx';
+
+type NavItem = {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+};
 
 export const Sidebar = () => {
   const pathname = usePathname();
 
-  const isRouteActive = (href: string) => {
+  const navItems: NavItem[] = [
+    { name: 'Dashboard', href: ROUTES.DASHBOARD, icon: LayoutDashboard },
+    { name: 'Notes', href: ROUTES.NOTES, icon: FileText },
+    { name: 'Flashcards', href: ROUTES.FLASHCARDS, icon: BrainCircuit },
+    { name: 'Meetings', href: ROUTES.MEETINGS, icon: Mic },
+    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
+    { name: 'Shared', href: '/shared', icon: Users },
+  ];
+
+  const bottomItems: NavItem[] = [
+    { name: 'Pricing', href: '/pricing', icon: CreditCard },
+    { name: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
+  ];
+
+  const isRouteActive = (href: string, name: string) => {
+    if (!pathname) return false;
+    if (name === 'Dashboard') return pathname === href;
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  const renderItem = (item: NavItem) => {
+    const isActive = isRouteActive(item.href, item.name);
+    const Icon = item.icon;
+
+    return (
+      <li key={item.name}>
+        <Link
+          href={item.href}
+          aria-current={isActive ? 'page' : undefined}
+          className={clsx(
+            'flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200',
+            isActive
+              ? 'bg-blue-50 text-blue-600 font-semibold'
+              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+          )}
+        >
+          <Icon size={20} />
+          <span className="text-[15px] font-medium tracking-wide">{item.name}</span>
+        </Link>
+      </li>
+    );
+  };
+
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* Branding */}
-      <div className="px-6 py-5">
-        <h2 className="text-xl font-bold text-gray-900">StudySnap</h2>
+    <div className="w-full flex flex-col p-6 h-full font-sans bg-white">
+      <div className="flex items-center gap-2 mb-10">
+        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
+          <Sparkles size={18} />
+        </div>
+        <span className="font-bold text-xl tracking-tight text-gray-900">StudySnap</span>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        <SidebarItem icon={LayoutDashboard} label="Dashboard" href={ROUTES.DASHBOARD} isActive={isRouteActive(ROUTES.DASHBOARD)} />
-        <SidebarItem icon={FileText} label="Notes" href={ROUTES.NOTES} isActive={isRouteActive(ROUTES.NOTES)} />
-        <SidebarItem icon={Layers2} label="Flashcards" href={ROUTES.FLASHCARDS} isActive={isRouteActive(ROUTES.FLASHCARDS)} />
-        <SidebarItem icon={Video} label="Meetings" href={ROUTES.MEETINGS} isActive={isRouteActive(ROUTES.MEETINGS)} />
-        <SidebarItem icon={BarChart3} label="Analytics" href={ROUTES.ANALYTICS} isActive={isRouteActive(ROUTES.ANALYTICS)} />
-        <SidebarItem icon={Share2} label="Shared" href="/shared" isActive={isRouteActive('/shared')} />
-        <SidebarItem icon={Tag} label="Pricing" href="/pricing" isActive={isRouteActive('/pricing')} />
-        <SidebarItem icon={Settings} label="Settings" href={ROUTES.SETTINGS} isActive={isRouteActive(ROUTES.SETTINGS)} />
+      <nav className="flex-1">
+        <ul className="space-y-1">{navItems.map(renderItem)}</ul>
       </nav>
 
-      {/* User Profile */}
-      <div className="px-4 py-4 border-t border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold flex-shrink-0">
-            H
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">Hour</p>
-            <p className="text-xs text-gray-500 truncate">hour@gmail.com</p>
-          </div>
-        </div>
+      <div className="mt-auto pt-6">
+        <ul className="space-y-1">{bottomItems.map(renderItem)}</ul>
       </div>
     </div>
-  );
-};
-
-interface SidebarItemProps {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  href: string;
-  isActive?: boolean;
-}
-
-const SidebarItem = ({ icon: Icon, label, href, isActive = false }: SidebarItemProps) => {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        'flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors duration-200',
-        isActive
-          ? 'bg-blue-50 text-blue-700'
-          : 'text-gray-700 hover:bg-gray-100'
-      )}
-      aria-current={isActive ? 'page' : undefined}
-    >
-      <Icon className={cn('w-5 h-5', isActive ? 'text-blue-600' : 'text-gray-600')} />
-      <span className="text-sm font-medium">{label}</span>
-    </Link>
   );
 };
