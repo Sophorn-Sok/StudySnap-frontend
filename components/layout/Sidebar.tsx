@@ -26,7 +26,7 @@ export const Sidebar = () => {
         <SidebarItem icon={FileText} label="Notes" href={ROUTES.NOTES} isActive={isRouteActive(ROUTES.NOTES)} />
         <SidebarItem icon={Layers2} label="Flashcards" href={ROUTES.FLASHCARDS} isActive={isRouteActive(ROUTES.FLASHCARDS)} />
         <SidebarItem icon={Video} label="Meetings" href={ROUTES.MEETINGS} isActive={isRouteActive(ROUTES.MEETINGS)} />
-        <SidebarItem icon={BarChart3} label="Analytics" href="/analytics" isActive={isRouteActive('/analytics')} />
+        <SidebarItem icon={BarChart3} label="Analytics" href={ROUTES.ANALYTICS} isActive={isRouteActive(ROUTES.ANALYTICS)} />
         <SidebarItem icon={Share2} label="Shared" href="/shared" isActive={isRouteActive('/shared')} />
         <SidebarItem icon={Tag} label="Pricing" href="/pricing" isActive={isRouteActive('/pricing')} />
         <SidebarItem icon={Settings} label="Settings" href={ROUTES.SETTINGS} isActive={isRouteActive(ROUTES.SETTINGS)} />

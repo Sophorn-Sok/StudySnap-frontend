@@ -26,6 +26,7 @@ export const ROUTES = {
   NOTE_NEW: '/notes/new',
   FLASHCARDS: '/flashcards',
   MEETINGS: '/meetings',
+  ANALYTICS: '/analytics',
   SETTINGS: '/settings',
 };
 
