@@ -9,9 +9,11 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout = ({ children, sidebar }: DashboardLayoutProps) => {
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-[#F8FAFC]">
       {sidebar && (
-        <aside className="w-64 bg-white shadow-sm border-r border-gray-200">{sidebar}</aside>
+        <aside className="w-64 bg-white border-r border-[#E2E8F0] flex flex-col shrink-0 transition-all duration-300 z-10">
+          {sidebar}
+        </aside>
       )}
       <main className="flex-1 overflow-auto">
         {children}
