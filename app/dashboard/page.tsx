@@ -17,7 +17,7 @@ export default function DashboardPage() {
     <>
       <Navbar />
       <DashboardLayout sidebar={<Sidebar />}>
-        <div className="p-8 max-w-7xl">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl">
           {/* Welcome Section */}
           <WelcomeHeader />
 
@@ -25,15 +25,15 @@ export default function DashboardPage() {
           <QuickActions />
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Left Column: Recent Notes and Study Analytics */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 lg:space-y-8">
               <RecentNotes />
               <StudyAnalytics />
             </div>
 
             {/* Right Column: Flashcard Progress and Upcoming Meetings */}
-            <div className="space-y-8">
+            <div className="space-y-6 lg:space-y-8">
               <FlashcardProgress />
               <UpcomingMeetings />
             </div>

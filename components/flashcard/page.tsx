@@ -28,10 +28,10 @@ export default function FlashcardsPageContent() {
     <div className="flex h-full w-full text-[#1E293B] overflow-hidden font-sans">
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-8 shrink-0">
-          <h1 className="text-xl font-bold">Flashcards</h1>
-          <div className="flex items-center gap-6">
-            <div className="relative group w-80">
+        <header className="min-h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 gap-3 shrink-0">
+          <h1 className="text-lg sm:text-xl font-bold">Flashcards</h1>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="relative group w-64 hidden md:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
               <input 
                 type="text" 
@@ -39,8 +39,8 @@ export default function FlashcardsPageContent() {
                 className="w-full bg-[#F1F5F9] border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none"
               />
             </div>
-            <div className="flex items-center gap-3">
-              <Button size="sm">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button size="sm" className="hidden sm:flex">
                 <Plus size={16} /> Create
               </Button>
               <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative transition-all">
@@ -56,14 +56,14 @@ export default function FlashcardsPageContent() {
 
         <div className="flex-1 flex overflow-hidden">
           {/* Main Scrollable Content */}
-          <main className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
             <div className="max-w-6xl mx-auto">
-              <div className="flex items-center justify-between mb-8">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
                 <div>
                   <h2 className="text-2xl font-extrabold tracking-tight">Your Flashcard Decks</h2>
                   <p className="text-sm text-gray-400 mt-1">6 decks · 258 total cards</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                   <Button variant="outline" size="sm">
                     <Upload size={16} /> Import CSV
                   </Button>
@@ -129,7 +129,7 @@ export default function FlashcardsPageContent() {
           </main>
 
           {/* Right Summary Sidebar */}
-          <aside className="w-80 bg-white border-l border-[#E2E8F0] p-8 overflow-y-auto shrink-0 hidden lg:block">
+          <aside className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-[#E2E8F0] p-4 sm:p-6 lg:p-8 overflow-y-auto shrink-0 block">
             <section className="mb-10">
               <h3 className="text-lg font-bold mb-6">Study Summary</h3>
               <div className="space-y-4 mb-8">
@@ -189,7 +189,7 @@ export default function FlashcardsPageContent() {
       </div>
 
       {/* Floating Action Button (Mobile/Tablet visible) */}
-      <div className="fixed bottom-8 right-8 lg:right-96 xl:right-[432px] pointer-events-none">
+      <div className="fixed bottom-6 right-6 lg:right-96 xl:right-[432px] pointer-events-none">
         <button className="pointer-events-auto w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all">
           <Plus size={28} />
         </button>

@@ -38,7 +38,7 @@ export default function SettingsPage() {
       <Navbar />
       <DashboardLayout sidebar={<Sidebar />}>
         {/* Main background matching the soft vibe */}
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-6 lg:p-10 font-sans text-slate-800 dark:text-slate-100 overflow-x-hidden transition-colors">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4 sm:p-6 lg:p-10 font-sans text-slate-800 dark:text-slate-100 overflow-x-hidden transition-colors">
           
           {/* Top header/search area - optional but good for spacing */}
           <div className="max-w-6xl mx-auto mb-8 flex justify-between items-center">

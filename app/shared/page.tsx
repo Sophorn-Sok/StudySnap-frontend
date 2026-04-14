@@ -1,11 +1,15 @@
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { Navbar } from '@/components/layout/Navbar';
 import SharingPage from '@/components/shared/page';
 
 export default function Page() {
   return (
-    <DashboardLayout sidebar={<Sidebar />}>
-      <SharingPage />
-    </DashboardLayout>
+    <>
+      <Navbar />
+      <DashboardLayout sidebar={<Sidebar />}>
+        <SharingPage />
+      </DashboardLayout>
+    </>
   );
 }

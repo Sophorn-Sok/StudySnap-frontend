@@ -19,7 +19,7 @@ export default function AnalyticsPage() {
     <>
       <Navbar />
       <DashboardLayout sidebar={<Sidebar />}>
-        <div className="p-8 max-w-7xl space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl space-y-6">
           {/* Header with time range selector */}
           <AnalyticsHeader />
 

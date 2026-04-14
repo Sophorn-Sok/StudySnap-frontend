@@ -1,6 +1,7 @@
 'use client';
 
-import { Search, Bell } from 'lucide-react';
+import Link from 'next/link';
+import { Search, Bell, Menu } from 'lucide-react';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import {
   Menubar,
@@ -9,15 +10,57 @@ import {
   MenubarContent,
   MenubarItem,
 } from '@/components/ui/menubar';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { AvatarDropdown } from '@/components/dashboard/AvatarDropdown';
+import { ROUTES } from '@/utils/constants';
+
+const mobileNavItems = [
+  { label: 'Dashboard', href: ROUTES.DASHBOARD },
+  { label: 'Notes', href: ROUTES.NOTES },
+  { label: 'Flashcards', href: ROUTES.FLASHCARDS },
+  { label: 'Meetings', href: ROUTES.MEETINGS },
+  { label: 'Analytics', href: '/analytics' },
+  { label: 'Shared', href: '/shared' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'Settings', href: ROUTES.SETTINGS },
+];
 
 export const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-40">
-      <div className="h-[60px] px-6 flex items-center justify-between">
+      <div className="h-[60px] px-4 sm:px-6 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Sheet>
+            <SheetTrigger asChild>
+              <button
+                className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                aria-label="Open navigation menu"
+              >
+                <Menu className="w-5 h-5 text-gray-700" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[280px] p-0">
+              <div className="p-5 border-b border-gray-100">
+                <span className="font-bold text-lg text-gray-900">StudySnap</span>
+              </div>
+              <div className="p-3 space-y-1">
+                {mobileNavItems.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="block px-3 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            </SheetContent>
+          </Sheet>
+          <span className="lg:hidden text-sm font-semibold text-gray-900">StudySnap</span>
+        </div>
 
         {/* Left: Search */}
-        <div className="w-72">
+        <div className="hidden md:block w-72">
           <InputGroup className="h-9 w-full border-gray-200 bg-gray-50">
             <InputGroupAddon>
               <Search className="w-4 h-4 text-gray-400" />
@@ -32,7 +75,7 @@ export const Navbar = () => {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
-          <Menubar className="border-none bg-transparent p-0 h-auto gap-0">
+          <Menubar className="hidden sm:flex border-none bg-transparent p-0 h-auto gap-0">
             <MenubarMenu>
               <MenubarTrigger className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors duration-150">
                 Create

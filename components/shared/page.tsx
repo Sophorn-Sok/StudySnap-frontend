@@ -17,14 +17,14 @@ import { Button } from '../ui/Button';
 
 export default function SharingPage() {
   return (
-    <div className="p-10 max-w-7xl mx-auto space-y-10">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto space-y-10">
       {/* Header */}
-      <div className="flex justify-between items-end">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Shared</h1>
           <p className="text-gray-500 mt-2">Collaborate with your study groups</p>
         </div>
-        <div className="flex space-x-4">
+        <div className="flex flex-wrap gap-3">
           <Button variant="outline" className="text-gray-700 bg-white">
             <UserPlus className="w-4 h-4" />
             Invite Users
@@ -130,6 +130,7 @@ export default function SharingPage() {
       <section>
         <h2 className="text-lg font-bold text-gray-900 mb-4">Shared Notes</h2>
         <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-gray-100 text-xs font-semibold text-gray-400 uppercase tracking-wider">
@@ -219,6 +220,7 @@ export default function SharingPage() {
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </section>
 
@@ -313,7 +315,7 @@ export default function SharingPage() {
         {/* Invite Users */}
         <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] self-start">
           <h2 className="text-lg font-bold text-gray-900 mb-6">Invite Users</h2>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="flex-1">
               <input 
                 type="email" 
@@ -328,7 +330,7 @@ export default function SharingPage() {
               </select>
               <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
-            <Button variant="primary" className="h-11 px-6 rounded-xl">
+            <Button variant="primary" className="h-11 px-6 rounded-xl justify-center">
               <Send className="w-4 h-4" />
               Send Invite
             </Button>

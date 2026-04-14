@@ -27,7 +27,7 @@ export default function NotesPageContent() {
   return (
     <div className="flex h-full w-full text-[#1E293B] overflow-hidden font-sans">
       {/* Folders Pane */}
-      <div className="w-72 bg-white border-r border-[#E2E8F0] flex flex-col p-6 shrink-0">
+      <div className="hidden lg:flex w-72 bg-white border-r border-[#E2E8F0] flex-col p-6 shrink-0">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-lg font-bold">Folders</h2>
           <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
@@ -54,7 +54,7 @@ export default function NotesPageContent() {
       </div>
 
       {/* Recent Notes Pane */}
-      <div className="w-[400px] border-r border-[#E2E8F0] flex flex-col p-6 shrink-0 bg-white/50 backdrop-blur-sm">
+      <div className="hidden xl:flex w-[400px] border-r border-[#E2E8F0] flex-col p-6 shrink-0 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold">Recent Notes</h2>
           <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">4 notes</span>
@@ -99,18 +99,18 @@ export default function NotesPageContent() {
       </div>
 
       {/* Content Area */}
-      <main className="flex-1 overflow-y-auto p-8 bg-white m-4 rounded-[32px] shadow-sm border border-[#E2E8F0]">
+      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white m-0 lg:m-4 rounded-none lg:rounded-[32px] shadow-sm border border-[#E2E8F0]">
         <div className="max-w-4xl mx-auto">
-          <header className="flex items-center justify-between mb-10">
-            <div className="flex items-center gap-4">
+          <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 lg:mb-10">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
               <span className="text-sm font-medium text-gray-400">Edited 2 hours ago</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Tag color="bg-blue-50 text-blue-600 px-3 py-1 text-xs">#AI</Tag>
                 <Tag color="bg-indigo-50 text-indigo-600 px-3 py-1 text-xs">#Machine Learning</Tag>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <Button variant="ghost" onClick={() => setIsEditing(true)}>
                 <Edit2 size={16} /> Edit
               </Button>
@@ -124,7 +124,7 @@ export default function NotesPageContent() {
           </header>
 
           <article>
-            <h1 className="text-4xl font-extrabold mb-4 tracking-tight">Introduction to Machine Learning</h1>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4 tracking-tight">Introduction to Machine Learning</h1>
             <div className="flex items-center gap-2 text-gray-400 mb-10 flex-wrap">
               <span className="font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md text-xs">AI Lectures</span>
               <span>·</span>

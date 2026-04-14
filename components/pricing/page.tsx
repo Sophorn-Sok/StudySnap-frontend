@@ -4,10 +4,10 @@ import { Button } from '../ui/Button';
 
 export default function PricingPage() {
   return (
-    <div className="p-10 max-w-5xl mx-auto font-sans pb-20">
+    <div className="p-4 sm:p-6 lg:p-10 max-w-5xl mx-auto font-sans pb-20">
       {/* Header */}
-      <div className="mb-12">
-        <h1 className="text-[28px] font-bold text-gray-900 tracking-tight">Choose Your Plan</h1>
+      <div className="mb-10">
+        <h1 className="text-2xl sm:text-[28px] font-bold text-gray-900 tracking-tight">Choose Your Plan</h1>
         <p className="text-[#64748B] mt-2 text-[15px]">Upgrade to unlock full AI-powered learning features</p>
       </div>
 
@@ -112,7 +112,7 @@ export default function PricingPage() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         
         {/* Payment Details */}
-        <div className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] h-full">
+        <div className="lg:col-span-3 bg-white border border-gray-100 rounded-2xl p-5 sm:p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] h-full">
           <h2 className="text-[17px] font-bold text-gray-900 mb-6">Payment Details</h2>
           
           <div className="space-y-5">
@@ -134,7 +134,7 @@ export default function PricingPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-[13px] font-semibold text-gray-600 mb-2">Expiry Date</label>
                 <input 
@@ -156,7 +156,7 @@ export default function PricingPage() {
         </div>
 
         {/* Order Summary */}
-        <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] h-full flex flex-col">
+        <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-5 sm:p-8 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] h-full flex flex-col">
           <h2 className="text-[17px] font-bold text-gray-900 mb-6">Order Summary</h2>
           
           <div className="space-y-4 flex-1">
