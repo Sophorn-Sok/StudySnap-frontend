@@ -38,7 +38,8 @@ export const useAuthStore = create<AuthStore>((set) => ({
         id: user.id,
         email: user.email,
         username: user.username,
-        createdAt: user.createdAt,
+        createdAt: new Date(user.createdAt),
+        updatedAt: new Date(user.updatedAt || user.createdAt),
       };
       
       set({ user: userData, token: mockToken, isLoading: false });
@@ -58,14 +59,15 @@ export const useAuthStore = create<AuthStore>((set) => ({
         id: Date.now().toString(),
         email,
         username,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       
       const mockToken = 'mock-token-' + Date.now();
       
       // Store user registration data in localStorage for demo
       const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      registeredUsers.push({ email, password, username, ...newUser });
+      registeredUsers.push({ ...newUser, password });
       localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
       
       set({ user: newUser, token: mockToken, isLoading: false });

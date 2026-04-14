@@ -19,7 +19,7 @@ export const createValidator = <T,>(schema: ZodSchema) => {
       const result = schema.safeParse(data);
       if (!result.success) {
         const errors: Record<string, string> = {};
-        result.error.errors.forEach((err) => {
+        result.error.issues.forEach((err) => {
           errors[err.path.join('.')] = err.message;
         });
         return { success: false, errors };
