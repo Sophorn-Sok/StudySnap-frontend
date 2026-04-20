@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 class ApiClient {
   private client: AxiosInstance;
@@ -16,6 +16,10 @@ class ApiClient {
 
     // Add request interceptor for auth token
     this.client.interceptors.request.use((config) => {
+      if (typeof window === 'undefined') {
+        return config;
+      }
+
       const token = localStorage.getItem('authToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -27,11 +31,18 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
+        if (error.response?.status === 401 && typeof window !== 'undefined') {
           // Handle unauthorized - redirect to login
           localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
           window.location.href = '/login';
         }
+
+        const backendMessage = error.response?.data?.error;
+        if (typeof backendMessage === 'string' && backendMessage.trim().length > 0) {
+          return Promise.reject(new Error(backendMessage));
+        }
+
         return Promise.reject(error);
       }
     );

@@ -14,6 +14,13 @@ export interface AuthCredentials {
   password: string;
 }
 
+export type OtpPurpose = 'register' | 'login';
+
+export interface OtpRequestResponse {
+  message: string;
+  delivery: 'email';
+}
+
 export interface AuthResponse {
   user: User;
   token: string;

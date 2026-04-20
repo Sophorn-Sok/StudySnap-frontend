@@ -26,21 +26,51 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpMessage, setOtpMessage] = useState('');
+  const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-  const { register, isLoading } = useAuthStore();
+  const { requestOtp, registerWithOtp, isLoading } = useAuthStore();
   const router = useRouter();
+
+  const handleRequestOtp = async () => {
+    setError('');
+    setOtpMessage('');
+
+    if (!email) {
+      setError('Please enter your email first.');
+      return;
+    }
+
+    setIsRequestingOtp(true);
+    try {
+      const response = await requestOtp(email, 'register');
+      setOtpMessage(response.message);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setIsRequestingOtp(false);
+    }
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    if (!otp.trim()) {
+      setError('Please request and enter OTP before signing up.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
     }
     try {
-      await register(email, password, username);
-      router.push('/login');
+      await registerWithOtp(email, password, username, otp.trim());
+      router.push('/dashboard');
     } catch (err) {
       setError((err as Error).message);
     }
@@ -172,7 +202,7 @@ export default function RegisterPage() {
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       placeholder="username"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -188,7 +218,7 @@ export default function RegisterPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="username@gmail.com"
-                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                   </div>
@@ -204,7 +234,7 @@ export default function RegisterPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                     <button
@@ -229,7 +259,7 @@ export default function RegisterPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       required
                     />
                     <button
@@ -243,12 +273,42 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Sign Up Button */}
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    onClick={handleRequestOtp}
+                    isLoading={isRequestingOtp}
+                    className="w-full py-2 px-4 border border-blue-300 bg-white text-blue-700 hover:bg-blue-50 rounded-lg"
+                  >
+                    Request OTP
+                  </Button>
+                  {otpMessage && (
+                    <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-2">
+                      {otpMessage}
+                    </p>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <label className="text-sm font-semibold text-gray-700 block mb-2">OTP Code</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="Enter 6-digit OTP"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={6}
+                    required
+                  />
+                </div>
+
                 <Button 
                   type="submit" 
                   isLoading={isLoading}
                   className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                 >
-                  Sign Up
+                  Verify OTP and Sign Up
                 </Button>
 
                 {/* Divider */}
@@ -261,7 +321,7 @@ export default function RegisterPage() {
                 {/* Google Sign Up Button */}
                 <button
                   type="button"
-                  className="w-full py-2 px-4 border border-gray-300 rounded-lg font-medium text-[#4A4A4A]-700 hover:bg-[#4A4A4A]-50 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-2 px-4 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
                 >
                   <svg
                     width="20"

@@ -32,10 +32,10 @@ const mockMeetings: Meeting[] = [
 
 const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
   return (
-    <Card className="p-6 border border-gray-200 !shadow-none rounded-lg">
+    <Card className="p-6 border border-gray-200 shadow-none! rounded-lg">
       <div className="flex gap-4">
         {/* Meeting Icon */}
-        <div className="flex-shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
           <Video className="w-5 h-5 text-gray-700" />
         </div>
 
@@ -51,7 +51,7 @@ const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
             <Button
               variant="outline"
               size="sm"
-              className="text-gray-700 border-gray-200 hover:bg-gray-50 h-7 px-4 text-sm font-medium"
+              className="bg-white text-gray-700 border-gray-200 hover:bg-gray-50 h-7 px-4 text-sm font-medium"
             >
               Join
             </Button>
@@ -71,7 +71,7 @@ const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
 
 export const UpcomingMeetings = () => {
   return (
-    <Card className="p-6 border border-gray-200 !shadow-none rounded-lg">
+    <Card className="p-6 border border-gray-200 shadow-none! rounded-lg">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Upcoming Meetings</h3>
       </div>

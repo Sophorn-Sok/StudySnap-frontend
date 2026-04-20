@@ -46,18 +46,24 @@ export const StudyAnalytics = () => {
 
       <div>
         <h4 className="text-sm font-medium text-gray-700 mb-4">This Week</h4>
-        <ChartContainer config={chartConfig} className="h-[200px] w-full">
+        <ChartContainer config={chartConfig} className="h-50 w-full">
           <BarChart accessibilityLayer data={mockAnalytics}>
-            <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <CartesianGrid vertical={false} stroke="#e5e7eb" strokeDasharray="3 3" />
             <XAxis
               dataKey="day"
               tickLine={false}
               tickMargin={10}
               axisLine={false}
+              tick={{ fill: '#6b7280', fontSize: 12 }}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="value" fill="var(--color-value)" radius={6} />
+            <ChartTooltip
+              cursor={{ fill: 'rgba(37, 99, 235, 0.10)' }}
+              content={
+                <ChartTooltipContent className="border-blue-100 bg-white shadow-lg [&_.text-foreground]:text-gray-900! [&_.text-muted-foreground]:text-gray-600!" />
+              }
+            />
+            <Bar dataKey="value" fill="var(--color-value)" activeBar={{ fill: '#1d4ed8' }} radius={6} />
           </BarChart>
         </ChartContainer>
       </div>

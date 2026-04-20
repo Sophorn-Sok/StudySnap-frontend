@@ -5,17 +5,34 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Navbar } from '@/components/layout/Navbar';
 import { User, Lock, Bell, MessageCircle, Clock, CheckCircle, Star, Search, Camera } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SettingsPage() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('Personal Info');
   const [darkMode, setDarkMode] = useState(false);
   const [cloudSync, setCloudSync] = useState(true);
+  const [fullName, setFullName] = useState('');
+  const [emailAddress, setEmailAddress] = useState('');
+  const [studyBio, setStudyBio] = useState('Tell us what you are studying and your learning goals.');
 
   useEffect(() => {
     // Set initial dark mode based on html class
     const isDark = document.documentElement.classList.contains('dark');
     setDarkMode(isDark);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+
+    const resolvedName =
+      `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username || 'StudySnap User';
+
+    setFullName(resolvedName);
+    setEmailAddress(user.email ?? '');
+  }, [user]);
 
   const toggleDarkMode = () => {
     setDarkMode((prev) => {
@@ -32,6 +49,7 @@ export default function SettingsPage() {
   // Reusable custom soft shadow classes to match the design
   const cardShadow = "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-none";
   const inputShadow = "shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] border border-slate-100 dark:border-slate-700 dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]";
+  const avatarSeed = (user?.username || fullName || 'StudySnap User').replace(/\s+/g, '-');
 
   return (
     <>
@@ -62,15 +80,15 @@ export default function SettingsPage() {
                 <div className="relative mb-4">
                   <div className="w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900 p-1">
                     <img 
-                      src="https://api.dicebear.com/7.x/notionists/svg?seed=Jane" 
+                      src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(avatarSeed)}`} 
                       alt="Profile" 
                       className="w-full h-full rounded-full bg-white dark:bg-slate-800 object-cover"
                     />
                   </div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-400 border-4 border-white dark:border-slate-800 rounded-full transition-colors"></div>
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">Alex Student</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 mt-1">Computer Science Major</p>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{fullName || 'StudySnap User'}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 mt-1">{emailAddress || 'Account not loaded yet'}</p>
                 
                 <div className="flex gap-3 w-full">
                   <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full py-2.5 font-semibold text-sm shadow-lg shadow-blue-500/30 transition-all">
@@ -140,7 +158,8 @@ export default function SettingsPage() {
                     <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider ml-2">Full Name</label>
                     <input 
                       type="text" 
-                      defaultValue="Alex Student"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
                       className={`w-full bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3.5 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${inputShadow}`}
                     />
                   </div>
@@ -148,7 +167,8 @@ export default function SettingsPage() {
                     <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider ml-2">Email Address</label>
                     <input 
                       type="email" 
-                      defaultValue="alex@studysnap.com"
+                      value={emailAddress}
+                      onChange={(e) => setEmailAddress(e.target.value)}
                       className={`w-full bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3.5 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${inputShadow}`}
                     />
                   </div>
@@ -158,7 +178,8 @@ export default function SettingsPage() {
                   <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider ml-2">Study Bio</label>
                   <textarea 
                     rows={3}
-                    defaultValue="Computer Science major focusing on AI and software engineering. Passionate about effective learning techniques and building cool apps."
+                    value={studyBio}
+                    onChange={(e) => setStudyBio(e.target.value)}
                     className={`w-full bg-slate-50 dark:bg-slate-900 rounded-3xl px-6 py-5 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all resize-none ${inputShadow}`}
                   />
                 </div>

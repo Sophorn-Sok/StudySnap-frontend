@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User, AuthResponse } from '@/types';
+import { User, AuthResponse, OtpPurpose, OtpRequestResponse } from '@/types';
 import { authService } from '@/services/auth.api';
 
 interface AuthStore {
@@ -8,7 +8,10 @@ interface AuthStore {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithOtp: (email: string, otp: string) => Promise<void>;
   register: (email: string, password: string, username: string) => Promise<void>;
+  registerWithOtp: (email: string, password: string, username: string, otp: string) => Promise<void>;
+  requestOtp: (email: string, purpose: OtpPurpose) => Promise<OtpRequestResponse>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
@@ -23,28 +26,29 @@ export const useAuthStore = create<AuthStore>((set) => ({
   login: async (email: string, password: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Demo mode: Check against locally stored users
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      const user = registeredUsers.find(
-        (u: any) => u.email === email && u.password === password
-      );
-      
-      if (!user) {
-        throw new Error('Invalid email or password');
+      const response: AuthResponse = await authService.login({ email, password });
+      set({ user: response.user, token: response.token, isLoading: false });
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
       }
-      
-      const mockToken = 'mock-token-' + Date.now();
-      const userData: User = {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        createdAt: new Date(user.createdAt),
-        updatedAt: new Date(user.updatedAt || user.createdAt),
-      };
-      
-      set({ user: userData, token: mockToken, isLoading: false });
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('currentUser', JSON.stringify(userData));
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  loginWithOtp: async (email: string, otp: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response: AuthResponse = await authService.loginWithOtp({ email, otp });
+      set({ user: response.user, token: response.token, isLoading: false });
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
+      }
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
       throw error;
@@ -54,27 +58,46 @@ export const useAuthStore = create<AuthStore>((set) => ({
   register: async (email: string, password: string, username: string) => {
     set({ isLoading: true, error: null });
     try {
-      // Demo mode: Store user locally instead of calling backend
-      const newUser: User = {
-        id: Date.now().toString(),
-        email,
-        username,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      
-      const mockToken = 'mock-token-' + Date.now();
-      
-      // Store user registration data in localStorage for demo
-      const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-      registeredUsers.push({ ...newUser, password });
-      localStorage.setItem('registeredUsers', JSON.stringify(registeredUsers));
-      
-      set({ user: newUser, token: mockToken, isLoading: false });
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('currentUser', JSON.stringify(newUser));
+      const response: AuthResponse = await authService.register({ email, password, username });
+      set({ user: response.user, token: response.token, isLoading: false });
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
+      }
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  registerWithOtp: async (email: string, password: string, username: string, otp: string) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response: AuthResponse = await authService.verifyRegisterOtp({
+        email,
+        password,
+        username,
+        otp,
+      });
+
+      set({ user: response.user, token: response.token, isLoading: false });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
+      }
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
+      throw error;
+    }
+  },
+
+  requestOtp: async (email: string, purpose: OtpPurpose) => {
+    set({ error: null });
+    try {
+      return await authService.requestOtp(email, purpose);
+    } catch (error) {
+      set({ error: (error as Error).message });
       throw error;
     }
   },
@@ -86,7 +109,10 @@ export const useAuthStore = create<AuthStore>((set) => ({
       console.error('Logout error:', error);
     }
     set({ user: null, token: null });
-    localStorage.removeItem('authToken');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+    }
   },
 
   setUser: (user: User | null) => set({ user }),

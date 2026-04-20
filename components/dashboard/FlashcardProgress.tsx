@@ -43,7 +43,7 @@ export const FlashcardProgress = () => {
                   background-color: var(--progress-color) !important;
                 }
               `}</style>
-              <Progress value={deck.progress} className="w-full" />
+              <Progress value={deck.progress} className="w-full bg-gray-200" />
             </div>
           </div>
         ))}
