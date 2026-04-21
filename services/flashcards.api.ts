@@ -49,4 +49,9 @@ export const flashcardsService = {
     const response = await api.post<StudySession>(`/flashcards/sessions/${sessionId}/complete`, { correctAnswers });
     return response.data;
   },
+
+  async getStudySessions(params?: { deckId?: string }): Promise<StudySession[]> {
+    const response = await api.get<StudySession[]>('/flashcards/sessions', { params });
+    return response.data;
+  },
 };

@@ -10,6 +10,14 @@ interface StatCardProps {
   label: string;
 }
 
+interface StatCardsProps {
+  totalStudyHours: number;
+  flashcardAccuracy: number;
+  retentionScore: number;
+  masteredDecks: number;
+  totalDecks: number;
+}
+
 const StatCard = ({ icon, iconBgColor, value, label }: StatCardProps) => (
   <Card className="p-5 shadow-sm border border-gray-100">
     <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${iconBgColor}`}>
@@ -20,30 +28,36 @@ const StatCard = ({ icon, iconBgColor, value, label }: StatCardProps) => (
   </Card>
 );
 
-export const StatCards = () => {
+export const StatCards = ({
+  totalStudyHours,
+  flashcardAccuracy,
+  retentionScore,
+  masteredDecks,
+  totalDecks,
+}: StatCardsProps) => {
   const stats: StatCardProps[] = [
     {
       icon: <Clock className="w-5 h-5 text-blue-600" />,
       iconBgColor: 'bg-blue-50',
-      value: '23.3h',
+      value: `${totalStudyHours.toFixed(1)}h`,
       label: 'Total Study Time',
     },
     {
       icon: <Target className="w-5 h-5 text-amber-600" />,
       iconBgColor: 'bg-amber-50',
-      value: '78%',
+      value: `${flashcardAccuracy}%`,
       label: 'Flashcard Accuracy',
     },
     {
       icon: <Brain className="w-5 h-5 text-green-600" />,
       iconBgColor: 'bg-green-50',
-      value: '85%',
+      value: `${retentionScore}%`,
       label: 'Retention Score',
     },
     {
       icon: <BookOpen className="w-5 h-5 text-purple-600" />,
       iconBgColor: 'bg-purple-50',
-      value: '6/10',
+      value: `${masteredDecks}/${totalDecks}`,
       label: 'Deck Mastery',
     },
   ];

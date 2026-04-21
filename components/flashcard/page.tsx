@@ -1,299 +1,496 @@
 'use client';
 
-import React from 'react';
-import { 
-  Search, 
-  Plus, 
-  Sparkles, 
-  Bell,
-  Upload,
-  MoreVertical,
-  CheckCircle2,
-  Clock,
-  Flame,
-  TrendingUp,
-  Brain,
-  Code,
-  Database,
-  Cpu,
-  Globe,
-  Play
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { BookOpen, CheckCircle2, Clock3, Play, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import Link from 'next/link';
-import { ROUTES } from '@/utils/constants';
+import { useFlashcardStore } from '@/store';
+import { Flashcard, StudySession } from '@/types';
+import { getRelativeTime } from '@/utils/helpers';
 
 export default function FlashcardsPageContent() {
+  const {
+    decks,
+    selectedDeck,
+    isLoading,
+    error,
+    fetchDecks,
+    createDeck,
+    deleteDeck,
+    addCard,
+    deleteCard,
+    startStudySession,
+    completeStudySession,
+    setSelectedDeck,
+  } = useFlashcardStore();
+
+  const [query, setQuery] = useState('');
+  const [showCreateDeckForm, setShowCreateDeckForm] = useState(false);
+  const [newDeckTitle, setNewDeckTitle] = useState('');
+  const [newDeckDescription, setNewDeckDescription] = useState('');
+  const [newCardFront, setNewCardFront] = useState('');
+  const [newCardBack, setNewCardBack] = useState('');
+  const [newCardDifficulty, setNewCardDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [activeSession, setActiveSession] = useState<StudySession | null>(null);
+  const [correctAnswersInput, setCorrectAnswersInput] = useState('0');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchDecks();
+  }, [fetchDecks]);
+
+  useEffect(() => {
+    if (!selectedDeck && decks.length > 0) {
+      setSelectedDeck(decks[0]);
+      return;
+    }
+
+    if (selectedDeck && !decks.some((deck) => deck.id === selectedDeck.id)) {
+      setSelectedDeck(decks[0] ?? null);
+      setActiveSession(null);
+    }
+  }, [decks, selectedDeck, setSelectedDeck]);
+
+  const activeDeck = useMemo(() => {
+    if (!selectedDeck) {
+      return null;
+    }
+
+    return decks.find((deck) => deck.id === selectedDeck.id) ?? selectedDeck;
+  }, [decks, selectedDeck]);
+
+  const filteredDecks = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return decks;
+    }
+
+    return decks.filter((deck) => {
+      const searchable = `${deck.title} ${deck.description ?? ''}`.toLowerCase();
+      return searchable.includes(normalizedQuery);
+    });
+  }, [decks, query]);
+
+  const stats = useMemo(() => {
+    const allCards = decks.flatMap((deck) => deck.cards);
+    const totalCards = allCards.length;
+    const masteredCards = allCards.filter((card) => card.reviewCount >= 5).length;
+    const dueCards = allCards.filter((card) => card.reviewCount < 2).length;
+
+    return {
+      totalDecks: decks.length,
+      totalCards,
+      masteredCards,
+      dueCards,
+    };
+  }, [decks]);
+
+  const deckMastery = (deckCards: Flashcard[]) => {
+    if (deckCards.length === 0) {
+      return 0;
+    }
+
+    const score = deckCards.reduce((total, card) => total + Math.min(card.reviewCount * 20, 100), 0);
+    return Math.round(score / deckCards.length);
+  };
+
+  const handleCreateDeck = async () => {
+    const title = newDeckTitle.trim();
+    if (!title) {
+      setLocalError('Deck title is required.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+
+    try {
+      const created = await createDeck(title, newDeckDescription.trim() || undefined);
+      setSelectedDeck(created);
+      setNewDeckTitle('');
+      setNewDeckDescription('');
+      setShowCreateDeckForm(false);
+      setFeedback('Deck created successfully.');
+    } catch (createError) {
+      setLocalError((createError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteDeck = async () => {
+    if (!activeDeck) {
+      return;
+    }
+
+    const shouldDelete = window.confirm(`Delete deck "${activeDeck.title}"? This also removes all cards in the deck.`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+
+    try {
+      const nextDeck = decks.find((deck) => deck.id !== activeDeck.id) ?? null;
+      await deleteDeck(activeDeck.id);
+      setSelectedDeck(nextDeck);
+      setActiveSession(null);
+      setFeedback('Deck deleted.');
+    } catch (deleteError) {
+      setLocalError((deleteError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAddCard = async () => {
+    if (!activeDeck) {
+      return;
+    }
+
+    const front = newCardFront.trim();
+    const back = newCardBack.trim();
+
+    if (!front || !back) {
+      setLocalError('Both front and back content are required.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+
+    try {
+      await addCard(activeDeck.id, front, back, newCardDifficulty);
+      setNewCardFront('');
+      setNewCardBack('');
+      setNewCardDifficulty('easy');
+      setFeedback('Card added to deck.');
+    } catch (addError) {
+      setLocalError((addError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteCard = async (card: Flashcard) => {
+    if (!activeDeck) {
+      return;
+    }
+
+    setLocalError(null);
+    setFeedback(null);
+    try {
+      await deleteCard(activeDeck.id, card.id);
+      setFeedback('Card deleted.');
+    } catch (deleteError) {
+      setLocalError((deleteError as Error).message);
+    }
+  };
+
+  const handleStartStudy = async () => {
+    if (!activeDeck) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+
+    try {
+      const session = await startStudySession(activeDeck.id);
+      setActiveSession(session);
+      setCorrectAnswersInput('0');
+      setFeedback(`Study session started for ${activeDeck.title}.`);
+    } catch (studyError) {
+      setLocalError((studyError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCompleteStudy = async () => {
+    if (!activeSession) {
+      return;
+    }
+
+    const parsed = Number.parseInt(correctAnswersInput, 10);
+    const maxCards = activeDeck?.cardCount ?? 0;
+    const safeCorrectAnswers = Number.isFinite(parsed) ? Math.max(0, Math.min(parsed, maxCards)) : 0;
+
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+
+    try {
+      await completeStudySession(activeSession.id, safeCorrectAnswers);
+      setActiveSession(null);
+      setCorrectAnswersInput('0');
+      setFeedback('Study session completed. Great work.');
+      await fetchDecks();
+    } catch (completeError) {
+      setLocalError((completeError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="flex h-full w-full text-[#1E293B] overflow-hidden font-sans">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="min-h-16 bg-white border-b border-[#E2E8F0] flex items-center justify-between px-4 sm:px-6 lg:px-8 py-3 gap-3 shrink-0">
-          <h1 className="text-lg sm:text-xl font-bold">Flashcards</h1>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative group w-64 hidden md:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-              <input 
-                type="text" 
-                placeholder="Search decks, cards..." 
-                className="w-full bg-[#F1F5F9] border-none rounded-xl py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none"
-              />
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <Button size="sm" className="hidden sm:flex">
-                <Plus size={16} /> Create
-              </Button>
-              <button className="p-2 text-gray-500 hover:bg-gray-100 rounded-full relative transition-all">
-                <Bell size={20} />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </button>
-              <div className="w-9 h-9 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner cursor-pointer hover:ring-4 ring-indigo-50 transition-all">
-                H
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <div className="flex-1 flex overflow-hidden">
-          {/* Main Scrollable Content */}
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
-            <div className="max-w-6xl mx-auto">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-8">
-                <div>
-                  <h2 className="text-2xl font-extrabold tracking-tight">Your Flashcard Decks</h2>
-                  <p className="text-sm text-gray-400 mt-1">6 decks · 258 total cards</p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <Button variant="outline" size="sm">
-                    <Upload size={16} /> Import CSV
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Sparkles size={16} className="text-purple-500" /> Generate from Notes
-                  </Button>
-                  <Button size="sm">
-                    <Plus size={18} /> Create Deck
-                  </Button>
-                </div>
-              </div>
-
-              {/* Deck Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-12">
-                <DeckCard 
-                  icon={<Brain className="text-blue-500" size={24} />}
-                  title="Machine Learning"
-                  count={52}
-                  mastery={75}
-                  tags={["AI-generated", "Study set"]}
-                  color="blue"
-                />
-                <DeckCard 
-                  icon={<Code className="text-indigo-500" size={24} />}
-                  title="Algorithms"
-                  count={38}
-                  mastery={60}
-                  tags={["Study set"]}
-                  color="indigo"
-                />
-                <DeckCard 
-                  icon={<Database className="text-emerald-500" size={24} />}
-                  title="Database Systems"
-                  count={45}
-                  mastery={88}
-                  tags={["AI-generated"]}
-                  color="emerald"
-                />
-                <DeckCard 
-                  icon={<Cpu className="text-orange-500" size={24} />}
-                  title="Operating Systems"
-                  count={31}
-                  mastery={42}
-                  tags={["Study set"]}
-                  color="orange"
-                />
-                <DeckCard 
-                  icon={<Globe className="text-pink-500" size={24} />}
-                  title="Computer Networks"
-                  count={28}
-                  mastery={55}
-                  tags={["AI-generated", "Study set"]}
-                  color="pink"
-                />
-                <div className="border-2 border-dashed border-gray-200 rounded-[32px] flex flex-col items-center justify-center p-8 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer group">
-                  <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-100 group-hover:text-blue-600 transition-all mb-4">
-                    <Plus size={24} />
-                  </div>
-                  <span className="font-bold text-gray-500 group-hover:text-blue-600 transition-colors text-lg">Create New Deck</span>
-                </div>
-              </div>
-            </div>
-          </main>
-
-          {/* Right Summary Sidebar */}
-          <aside className="w-full lg:w-80 bg-white border-t lg:border-t-0 lg:border-l border-[#E2E8F0] p-4 sm:p-6 lg:p-8 overflow-y-auto shrink-0 block">
-            <section className="mb-10">
-              <h3 className="text-lg font-bold mb-6">Study Summary</h3>
-              <div className="space-y-4 mb-8">
-                <SummaryCard 
-                  icon={<CheckCircle2 size={18} className="text-emerald-500" />}
-                  label="Cards Mastered"
-                  value="128"
-                  bgColor="bg-emerald-50/50 hover:bg-emerald-50"
-                />
-                <SummaryCard 
-                  icon={<Clock size={18} className="text-amber-500" />}
-                  label="Due Today"
-                  value="24"
-                  bgColor="bg-amber-50/50 hover:bg-amber-50"
-                />
-                <SummaryCard 
-                  icon={<Flame size={18} className="text-rose-500" />}
-                  label="Study Streak"
-                  value="14 days"
-                  bgColor="bg-rose-50/50 hover:bg-rose-50"
-                  active
-                />
-                <SummaryCard 
-                  icon={<TrendingUp size={18} className="text-blue-500" />}
-                  label="Weekly Progress"
-                  value="+18%"
-                  bgColor="bg-blue-50/50 hover:bg-blue-50"
-                />
-              </div>
-              <Button className="w-full h-14 shadow-lg shadow-blue-200/50">
-                Review Due Cards
-              </Button>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-bold mb-6">Recent Activity</h3>
-              <div className="space-y-6">
-                <ActivityItem 
-                  title="Machine Learning"
-                  action="Studied 12 cards"
-                  time="2h ago"
-                />
-                <ActivityItem 
-                  title="Algorithms"
-                  action="Added 5 new cards"
-                  time="5h ago"
-                />
-                <ActivityItem 
-                  title="Database Systems"
-                  action="Completed review"
-                  time="1d ago"
-                />
-              </div>
-            </section>
-          </aside>
+    <div className="flex h-full w-full overflow-hidden font-sans text-slate-800">
+      <aside className="w-full max-w-sm shrink-0 border-r border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Flashcards</h2>
+          <Button variant="outline" size="sm" onClick={() => setShowCreateDeckForm((current) => !current)}>
+            <Plus size={14} /> New Deck
+          </Button>
         </div>
-      </div>
 
-      {/* Floating Action Button (Mobile/Tablet visible) */}
-      <div className="fixed bottom-6 right-6 lg:right-96 xl:right-[432px] pointer-events-none">
-        <button className="pointer-events-auto w-14 h-14 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 transition-all">
-          <Plus size={28} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function DeckCard({ icon, title, count, mastery, tags, color }: { icon: React.ReactNode, title: string, count: number, mastery: number, tags: string[], color: string }) {
-  const colorMap: Record<string, string> = {
-    blue: "bg-blue-50 border-blue-100/50",
-    indigo: "bg-indigo-50 border-indigo-100/50",
-    emerald: "bg-emerald-50 border-emerald-100/50",
-    orange: "bg-orange-50 border-orange-100/50",
-    pink: "bg-pink-50 border-pink-100/50"
-  };
-
-  const progressColorMap: Record<string, string> = {
-    blue: "bg-blue-500",
-    indigo: "bg-indigo-500",
-    emerald: "bg-emerald-500",
-    orange: "bg-orange-500",
-    pink: "bg-pink-500"
-  };
-
-  const tagColorMap: Record<string, string> = {
-    blue: "bg-blue-50 text-blue-600",
-    indigo: "bg-indigo-50 text-indigo-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    orange: "bg-orange-50 text-orange-600",
-    pink: "bg-pink-50 text-pink-600"
-  };
-
-  return (
-    <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/50 transition-all group flex flex-col h-full ring-1 ring-gray-50">
-      <div className="flex items-center justify-between mb-6">
-        <div className={`w-12 h-12 flex items-center justify-center rounded-2xl ${colorMap[color]} group-hover:scale-110 transition-transform`}>
-          {icon}
-        </div>
-        <button className="p-1.5 text-gray-300 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
-          <MoreVertical size={20} />
-        </button>
-      </div>
-
-      <h4 className="text-xl font-bold mb-1 text-gray-900">{title}</h4>
-      <p className="text-sm font-medium text-gray-400 mb-6">{count} cards</p>
-
-      <div className="flex gap-2 mb-8">
-        {tags.map((tag, idx) => (
-          <span key={idx} className={`text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider ${tag === "AI-generated" ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'}`}>
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      <div className="mt-auto">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-bold text-gray-400">Mastery</span>
-          <span className={`text-xs font-bold ${progressColorMap[color].replace('bg-', 'text-')}`}>{mastery}%</span>
-        </div>
-        <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden mb-8">
-          <div 
-            className={`h-full ${progressColorMap[color]} transition-all duration-1000`} 
-            style={{ width: `${mastery}%` }}
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search decks..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
           />
         </div>
 
-        <Button 
-          variant="outline" 
-          className={`
-            w-full justify-center py-3.5 rounded-2xl gap-2 font-bold transition-all 
-            ${colorMap[color]} border-transparent 
-            hover:shadow-lg hover:shadow-gray-100/50 hover:bg-white hover:border-gray-100
-            active:scale-[0.98]
-          `}
-        >
-          <Play size={16} className={progressColorMap[color].replace('bg-', 'text-')} fill="currentColor" /> 
-          <span className={progressColorMap[color].replace('bg-', 'text-')}>Study Now</span>
-        </Button>
-      </div>
-    </div>
-  );
-}
+        {showCreateDeckForm && (
+          <div className="mb-4 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <input
+              type="text"
+              value={newDeckTitle}
+              onChange={(event) => setNewDeckTitle(event.target.value)}
+              placeholder="Deck title"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+            />
+            <textarea
+              value={newDeckDescription}
+              onChange={(event) => setNewDeckDescription(event.target.value)}
+              placeholder="Deck description (optional)"
+              rows={2}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+            />
+            <div className="flex items-center justify-end gap-2">
+              <Button variant="outline" size="sm" onClick={() => setShowCreateDeckForm(false)}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleCreateDeck} isLoading={isSubmitting}>
+                Create
+              </Button>
+            </div>
+          </div>
+        )}
 
-function SummaryCard({ icon, label, value, bgColor, active = false }: { icon: React.ReactNode, label: string, value: string, bgColor: string, active?: boolean }) {
-  return (
-    <div className={`flex items-center justify-between p-4 rounded-2xl transition-all cursor-pointer border border-transparent hover:border-gray-100 ${bgColor}`}>
-      <div className="flex items-center gap-3">
-        <div className="bg-white p-2.5 rounded-xl shadow-sm">
-          {icon}
+        <div className="mb-4 grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-xl bg-blue-50 p-3">
+            <p className="text-slate-500">Decks</p>
+            <p className="text-lg font-bold text-blue-700">{stats.totalDecks}</p>
+          </div>
+          <div className="rounded-xl bg-indigo-50 p-3">
+            <p className="text-slate-500">Cards</p>
+            <p className="text-lg font-bold text-indigo-700">{stats.totalCards}</p>
+          </div>
         </div>
-        <span className="text-sm font-bold text-gray-700">{label}</span>
-      </div>
-      <span className={`text-sm font-extrabold ${active ? 'text-rose-600' : 'text-gray-900'}`}>{value}</span>
-    </div>
-  );
-}
 
-function ActivityItem({ title, action, time }: { title: string, action: string, time: string }) {
-  return (
-    <div className="flex flex-col gap-1 border-l-2 border-gray-50 pl-4 relative">
-      <div className="absolute top-0 -left-[5px] w-2 h-2 rounded-full bg-gray-200"></div>
-      <h5 className="text-[15px] font-bold text-gray-900">{title}</h5>
-      <p className="text-xs text-gray-500 leading-none">{action} · <span className="text-gray-400 font-medium">{time}</span></p>
+        {isLoading && <p className="text-sm text-slate-500">Loading decks...</p>}
+        {(error || localError) && <p className="mb-3 text-sm text-red-600">{localError ?? error}</p>}
+        {feedback && <p className="mb-3 text-sm text-emerald-600">{feedback}</p>}
+
+        <div className="space-y-2 overflow-y-auto pr-1">
+          {!isLoading && filteredDecks.length === 0 && <p className="text-sm text-slate-500">No decks found.</p>}
+
+          {filteredDecks.map((deck) => {
+            const active = activeDeck?.id === deck.id;
+            return (
+              <button
+                key={deck.id}
+                type="button"
+                onClick={() => {
+                  setSelectedDeck(deck);
+                  setActiveSession(null);
+                }}
+                className={`w-full rounded-xl border px-3 py-3 text-left transition ${
+                  active
+                    ? 'border-blue-200 bg-blue-50/60'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <p className="truncate text-sm font-semibold text-slate-900">{deck.title}</p>
+                <p className="mt-1 text-xs text-slate-500">
+                  {deck.cardCount} cards · {deckMastery(deck.cards)}% mastery
+                </p>
+                <div className="mt-2 flex items-center gap-1 text-[11px] text-slate-400">
+                  <Clock3 size={12} />
+                  {getRelativeTime(deck.updatedAt)}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+
+      <main className="min-w-0 flex-1 overflow-y-auto bg-white p-6 lg:p-8">
+        {!activeDeck ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
+            Create or select a deck to start managing flashcards.
+          </div>
+        ) : (
+          <div className="mx-auto max-w-5xl space-y-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-2xl font-bold text-slate-900">{activeDeck.title}</h3>
+                <p className="text-sm text-slate-500">{activeDeck.description ?? 'No description yet.'}</p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleDeleteDeck} isLoading={isSubmitting}>
+                  <Trash2 size={14} /> Delete Deck
+                </Button>
+                <Button size="sm" onClick={handleStartStudy} isLoading={isSubmitting}>
+                  <Play size={14} /> Study Now
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Cards in Deck</p>
+                <p className="mt-1 text-xl font-bold text-slate-900">{activeDeck.cardCount}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Mastered</p>
+                <p className="mt-1 text-xl font-bold text-emerald-600">{activeDeck.cards.filter((card) => card.reviewCount >= 5).length}</p>
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">Due for Review</p>
+                <p className="mt-1 text-xl font-bold text-amber-600">{activeDeck.cards.filter((card) => card.reviewCount < 2).length}</p>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <Sparkles size={16} className="text-blue-500" />
+                Add a card to this deck
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <textarea
+                  value={newCardFront}
+                  onChange={(event) => setNewCardFront(event.target.value)}
+                  placeholder="Front (question)"
+                  rows={4}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+                <textarea
+                  value={newCardBack}
+                  onChange={(event) => setNewCardBack(event.target.value)}
+                  placeholder="Back (answer)"
+                  rows={4}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <select
+                  value={newCardDifficulty}
+                  onChange={(event) => setNewCardDifficulty(event.target.value as 'easy' | 'medium' | 'hard')}
+                  className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+
+                <Button size="sm" onClick={handleAddCard} isLoading={isSubmitting}>
+                  <Plus size={14} /> Add Card
+                </Button>
+              </div>
+            </div>
+
+            {activeSession && activeSession.deckId === activeDeck.id && (
+              <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700">
+                  <CheckCircle2 size={16} />
+                  Active study session
+                </div>
+                <p className="mb-3 text-sm text-blue-700">Enter how many answers you got correct before completing this session.</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={activeDeck.cardCount}
+                    value={correctAnswersInput}
+                    onChange={(event) => setCorrectAnswersInput(event.target.value)}
+                    className="w-40 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                  />
+                  <Button size="sm" onClick={handleCompleteStudy} isLoading={isSubmitting}>
+                    Complete Session
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <section className="rounded-2xl border border-slate-200 p-4">
+              <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-700">
+                <BookOpen size={16} className="text-indigo-500" />
+                Cards ({activeDeck.cards.length})
+              </div>
+
+              <div className="space-y-3">
+                {activeDeck.cards.length === 0 && (
+                  <p className="text-sm text-slate-500">No cards yet. Add your first flashcard above.</p>
+                )}
+
+                {activeDeck.cards.map((card) => (
+                  <article key={card.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                    <div className="mb-2 flex items-center justify-between gap-2">
+                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
+                        {card.difficulty}
+                      </span>
+                      <div className="flex items-center gap-2 text-xs text-slate-500">
+                        <span>Reviews: {card.reviewCount}</span>
+                        <button
+                          type="button"
+                          onClick={() => void handleDeleteCard(card)}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-sm font-semibold text-slate-900">Q: {card.front}</p>
+                    <p className="mt-1 text-sm text-slate-600">A: {card.back}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
+      </main>
+
+      <aside className="hidden w-72 shrink-0 border-l border-slate-200 bg-white p-5 xl:block">
+        <h3 className="mb-4 text-base font-bold text-slate-900">Study Summary</h3>
+        <div className="space-y-3 text-sm">
+          <div className="rounded-xl bg-emerald-50 p-3">
+            <p className="text-emerald-700">Cards Mastered</p>
+            <p className="text-xl font-bold text-emerald-800">{stats.masteredCards}</p>
+          </div>
+          <div className="rounded-xl bg-amber-50 p-3">
+            <p className="text-amber-700">Due Today</p>
+            <p className="text-xl font-bold text-amber-800">{stats.dueCards}</p>
+          </div>
+          <div className="rounded-xl bg-blue-50 p-3">
+            <p className="text-blue-700">Total Cards</p>
+            <p className="text-xl font-bold text-blue-800">{stats.totalCards}</p>
+          </div>
+        </div>
+      </aside>
     </div>
   );
 }

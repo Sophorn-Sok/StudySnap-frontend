@@ -1,238 +1,221 @@
 'use client';
 
-import React from 'react';
-import { 
-  Search, 
-  Plus, 
-  Edit2, 
-  Share2, 
-  Sparkles, 
-  MoreVertical,
-  CheckCircle2,
-  FolderOpen
-} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CheckCircle2, Clock, Plus, Save, Search, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
-import Link from 'next/link';
-import { ROUTES } from '@/utils/constants';
-import { useState } from 'react';
-import EditorView from './EditorView';
+import { useNotesStore } from '@/store';
+import { getRelativeTime } from '@/utils/helpers';
 
 export default function NotesPageContent() {
-  const [isEditing, setIsEditing] = useState(false);
+  const {
+    notes,
+    selectedNote,
+    isLoading,
+    error,
+    fetchNotes,
+    createNote,
+    updateNote,
+    deleteNote,
+    setSelectedNote,
+  } = useNotesStore();
 
-  if (isEditing) {
-    return <EditorView />;
-  }
+  const [query, setQuery] = useState('');
+  const [draftTitle, setDraftTitle] = useState('');
+  const [draftContent, setDraftContent] = useState('');
+  const [draftTags, setDraftTags] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void fetchNotes();
+  }, [fetchNotes]);
+
+  useEffect(() => {
+    if (!selectedNote && notes.length > 0) {
+      setSelectedNote(notes[0]);
+      return;
+    }
+
+    if (selectedNote) {
+      setDraftTitle(selectedNote.title);
+      setDraftContent(selectedNote.content);
+      setDraftTags((selectedNote.tags ?? []).join(', '));
+    }
+  }, [notes, selectedNote, setSelectedNote]);
+
+  const filteredNotes = useMemo(() => {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) return notes;
+
+    return notes.filter((note) => {
+      const searchableText = `${note.title} ${note.content} ${(note.tags ?? []).join(' ')}`.toLowerCase();
+      return searchableText.includes(normalizedQuery);
+    });
+  }, [notes, query]);
+
+  const handleCreateNote = async () => {
+    setLocalError(null);
+    try {
+      const created = await createNote('Untitled Note', 'Start writing your note here...', []);
+      setSelectedNote(created);
+    } catch (createError) {
+      setLocalError((createError as Error).message);
+    }
+  };
+
+  const handleSaveNote = async () => {
+    if (!selectedNote) return;
+
+    setIsSaving(true);
+    setLocalError(null);
+
+    try {
+      const tags = draftTags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+
+      await updateNote(selectedNote.id, {
+        title: draftTitle.trim() || 'Untitled Note',
+        content: draftContent,
+        tags,
+      });
+    } catch (saveError) {
+      setLocalError((saveError as Error).message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeleteNote = async () => {
+    if (!selectedNote) return;
+
+    setLocalError(null);
+    try {
+      await deleteNote(selectedNote.id);
+      const nextNote = notes.find((note) => note.id !== selectedNote.id) ?? null;
+      setSelectedNote(nextNote);
+    } catch (deleteError) {
+      setLocalError((deleteError as Error).message);
+    }
+  };
 
   return (
-    <div className="flex h-full w-full text-[#1E293B] overflow-hidden font-sans">
-      {/* Folders Pane */}
-      <div className="hidden lg:flex w-72 bg-white border-r border-[#E2E8F0] flex-col p-6 shrink-0">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-lg font-bold">Folders</h2>
-          <button className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all">
-            <Plus size={20} />
-          </button>
+    <div className="flex h-full w-full overflow-hidden font-sans text-slate-800">
+      <aside className="w-full max-w-sm shrink-0 border-r border-slate-200 bg-white p-5">
+        <div className="mb-5 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Notes</h2>
+          <Button variant="outline" size="sm" onClick={handleCreateNote}>
+            <Plus size={14} /> New
+          </Button>
         </div>
 
-        <div className="space-y-2 mb-10">
-          <FolderItem icon={<FolderOpen className="text-blue-500" size={18} />} label="AI Lectures" count={12} active />
-          <FolderItem icon={<FolderOpen className="text-purple-500" size={18} />} label="Software Engineering" count={8} />
-          <FolderItem icon={<FolderOpen className="text-orange-500" size={18} />} label="Machine Learning" count={15} />
-          <FolderItem icon={<FolderOpen className="text-emerald-500" size={18} />} label="Personal Notes" count={5} />
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search notes..."
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+          />
         </div>
 
-        <div>
-          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Tags</h3>
-          <div className="flex flex-wrap gap-2">
-            <Tag color="bg-blue-100 text-blue-600">AI</Tag>
-            <Tag color="bg-orange-100 text-orange-600">Database</Tag>
-            <Tag color="bg-emerald-100 text-emerald-600">Algorithms</Tag>
-            <Tag color="bg-red-100 text-red-600">Research</Tag>
+        {isLoading && <p className="text-sm text-slate-500">Loading notes...</p>}
+        {(error || localError) && <p className="mb-3 text-sm text-red-600">{localError ?? error}</p>}
+
+        <div className="space-y-2 overflow-y-auto pr-1">
+          {!isLoading && filteredNotes.length === 0 && (
+            <p className="text-sm text-slate-500">No notes found.</p>
+          )}
+
+          {filteredNotes.map((note) => {
+            const active = selectedNote?.id === note.id;
+            return (
+              <button
+                key={note.id}
+                type="button"
+                onClick={() => setSelectedNote(note)}
+                className={`w-full rounded-xl border px-3 py-3 text-left transition ${
+                  active
+                    ? 'border-blue-200 bg-blue-50/60'
+                    : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <p className="truncate text-sm font-semibold text-slate-900">{note.title}</p>
+                <p className="mt-1 line-clamp-2 text-xs text-slate-500">{note.content}</p>
+                <div className="mt-2 flex items-center gap-1 text-[11px] text-slate-400">
+                  <Clock size={12} />
+                  {getRelativeTime(note.updatedAt)}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </aside>
+
+      <main className="min-w-0 flex-1 overflow-y-auto bg-white p-6 lg:p-8">
+        {!selectedNote ? (
+          <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-slate-500">
+            Select a note to view and edit.
           </div>
-        </div>
-      </div>
+        ) : (
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <CheckCircle2 size={16} className="text-emerald-500" />
+                Synced with backend
+              </div>
 
-      {/* Recent Notes Pane */}
-      <div className="hidden xl:flex w-[400px] border-r border-[#E2E8F0] flex-col p-6 shrink-0 bg-white/50 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold">Recent Notes</h2>
-          <span className="text-xs font-medium text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">4 notes</span>
-        </div>
-
-        <div className="relative mb-6 group">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Search notes..." 
-            className="w-full bg-[#F1F5F9] border-none rounded-2xl py-3 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all outline-none placeholder:text-gray-400"
-          />
-        </div>
-
-        <div className="flex-1 space-y-4 overflow-y-auto pr-2 custom-scrollbar">
-          <NoteCard 
-            title="Introduction to Machine Learning"
-            preview="Machine learning is a branch of artificial intelligence that focuses on the use of data and algorithms..."
-            tags={[{ label: 'AI', color: 'bg-blue-50 text-blue-500' }, { label: 'Machine Learning', color: 'bg-indigo-50 text-indigo-500' }]}
-            time="2 hours ago"
-            active
-          />
-          <NoteCard 
-            title="Photosynthesis Study Guide"
-            preview="Photosynthesis is the process by which green plants convert sunlight into chemical energy"
-            tags={[{ label: 'Biology', color: 'bg-emerald-50 text-emerald-500' }, { label: 'Research', color: 'bg-pink-50 text-pink-500' }]}
-            time="5 hours ago"
-          />
-          <NoteCard 
-            title="World War II Timeline"
-            preview="A comprehensive timeline covering major events from 1939 to 1945, including key battles and"
-            tags={[{ label: 'History', color: 'bg-amber-50 text-amber-500' }]}
-            time="1 day ago"
-          />
-          <NoteCard 
-            title="Data Structures & Algorithms"
-            preview="Exploring fundamental data structures including arrays, linked lists, trees, and graphs with"
-            tags={[{ label: 'Algorithms', color: 'bg-green-50 text-green-500' }, { label: 'Database', color: 'bg-orange-50 text-orange-500' }]}
-            time="2 days ago"
-          />
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-white m-0 lg:m-4 rounded-none lg:rounded-[32px] shadow-sm border border-[#E2E8F0]">
-        <div className="max-w-4xl mx-auto">
-          <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-8 lg:mb-10">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <span className="text-sm font-medium text-gray-400">Edited 2 hours ago</span>
-              <div className="flex flex-wrap gap-2">
-                <Tag color="bg-blue-50 text-blue-600 px-3 py-1 text-xs">#AI</Tag>
-                <Tag color="bg-indigo-50 text-indigo-600 px-3 py-1 text-xs">#Machine Learning</Tag>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleDeleteNote}>
+                  <Trash2 size={14} /> Delete
+                </Button>
+                <Button size="sm" onClick={handleSaveNote} isLoading={isSaving}>
+                  <Save size={14} /> Save
+                </Button>
               </div>
             </div>
-            
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-              <Button variant="ghost" onClick={() => setIsEditing(true)}>
-                <Edit2 size={16} /> Edit
-              </Button>
-              <Button variant="ghost">
-                <Share2 size={16} /> Share
-              </Button>
-              <Button>
-                <Sparkles size={16} /> Generate Flashcards
-              </Button>
-            </div>
-          </header>
 
-          <article>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4 tracking-tight">Introduction to Machine Learning</h1>
-            <div className="flex items-center gap-2 text-gray-400 mb-10 flex-wrap">
-              <span className="font-medium text-gray-600 bg-gray-100 px-2 py-0.5 rounded-md text-xs">AI Lectures</span>
-              <span>·</span>
-              <span className="text-sm">Last edited 2 hours ago</span>
-              <span>·</span>
-              <span className="flex items-center gap-1 text-sm bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full">
-                <CheckCircle2 size={14} /> Saved
-              </span>
-            </div>
-
-            <div className="prose prose-slate max-w-none">
-              <p className="text-lg leading-relaxed text-gray-600 font-normal mb-12">
-                Machine learning is a branch of artificial intelligence that focuses on the use of data and algorithms to imitate the way humans learn, gradually improving its accuracy. It enables computers to learn from experience without being explicitly programmed, making it one of the most transformative technologies of our time.
-              </p>
-
-              <div className="mb-12">
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                  Core Concepts
-                </h2>
-                <div className="space-y-4">
-                  <ConceptItem 
-                    title="Supervised Learning" 
-                    description="Learning from labeled training data to make predictions on new, unseen data." 
-                  />
-                  <ConceptItem 
-                    title="Unsupervised Learning" 
-                    description="Finding hidden patterns or intrinsic structures in unlabeled data." 
-                  />
-                  <ConceptItem 
-                    title="Reinforcement Learning" 
-                    description="Learning optimal actions through trial and error with rewards and penalties." 
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Title</label>
+                <input
+                  type="text"
+                  value={draftTitle}
+                  onChange={(event) => setDraftTitle(event.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-4 py-3 text-lg font-semibold text-slate-900 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
               </div>
 
               <div>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                  <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-                  Key Applications
-                </h2>
-                <p className="text-gray-600 leading-relaxed bg-[#F8FAFC]/50 p-6 rounded-2xl border border-[#E2E8F0]">
-                  Machine learning powers many modern technologies including natural language processing, computer vision, recommendation systems, and autonomous vehicles. Its applications span across healthcare, finance, education, and entertainment industries.
-                </p>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Tags</label>
+                <input
+                  type="text"
+                  value={draftTags}
+                  onChange={(event) => setDraftTags(event.target.value)}
+                  placeholder="ai, database, algorithms"
+                  className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
               </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Content</label>
+                <textarea
+                  value={draftContent}
+                  onChange={(event) => setDraftContent(event.target.value)}
+                  rows={18}
+                  className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm leading-6 text-slate-800 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+
+              <p className="text-xs text-slate-400">
+                Created {new Date(selectedNote.createdAt).toLocaleString()} · Updated {new Date(selectedNote.updatedAt).toLocaleString()}
+              </p>
             </div>
-          </article>
-        </div>
+          </div>
+        )}
       </main>
-    </div>
-  );
-}
-
-function FolderItem({ icon, label, count, active = false }: { icon: React.ReactNode, label: string, count: number, active?: boolean }) {
-  return (
-    <div className={`
-      flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer group transition-all
-      ${active ? 'bg-blue-50/50' : 'hover:bg-gray-50'}
-    `}>
-      <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg transition-colors ${active ? 'bg-white shadow-sm' : 'bg-transparent group-hover:bg-white'}`}>
-          {icon}
-        </div>
-        <span className={`text-[15px] ${active ? 'font-bold text-gray-900' : 'font-medium text-gray-500 group-hover:text-gray-900'}`}>{label}</span>
-      </div>
-      <span className="text-xs font-semibold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-md group-hover:bg-white transition-colors">{count}</span>
-    </div>
-  );
-}
-
-function NoteCard({ title, preview, tags, time, active = false }: { title: string, preview: string, tags: {label: string, color: string}[], time: string, active?: boolean }) {
-  return (
-    <div className={`
-      p-5 rounded-[24px] cursor-pointer border transition-all duration-300
-      ${active ? 'bg-white border-blue-100 shadow-[0_12px_24px_-8px_rgba(37,99,235,0.1)] ring-1 ring-blue-50 scale-[1.02]' : 'hover:bg-white hover:border-gray-100 hover:shadow-xl hover:shadow-gray-100/50 grayscale-[0.2] hover:grayscale-0'}
-    `}>
-      <h4 className={`font-bold mb-2 ${active ? 'text-blue-900' : 'text-gray-800'}`}>{title}</h4>
-      <p className="text-sm text-gray-500/80 mb-4 line-clamp-2 leading-relaxed">{preview}</p>
-      <div className="flex items-center justify-between">
-        <div className="flex gap-2">
-          {tags.map((tag, idx) => (
-            <span key={idx} className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider ${tag.color}`}>
-              {tag.label}
-            </span>
-          ))}
-        </div>
-        <span className="text-[10px] font-semibold text-gray-300 uppercase tracking-widest">{time}</span>
-      </div>
-    </div>
-  );
-}
-
-function Tag({ children, color }: { children: React.ReactNode, color: string }) {
-  return (
-    <span className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all hover:scale-105 cursor-pointer ${color}`}>
-      {children}
-    </span>
-  );
-}
-
-function ConceptItem({ title, description }: { title: string, description: string }) {
-  return (
-    <div className="flex items-start gap-4 p-6 bg-white rounded-2xl border border-[#E2E8F0] hover:border-blue-200 transition-all hover:shadow-lg hover:shadow-blue-50/50 group">
-      <div className="w-2 h-2 rounded-full bg-blue-600 mt-2.5 ring-4 ring-blue-100 group-hover:scale-125 transition-transform"></div>
-      <div>
-        <h4 className="font-bold text-gray-900 mb-1">{title}</h4>
-        <p className="text-sm text-gray-500 leading-relaxed font-medium">{description}</p>
-      </div>
     </div>
   );
 }

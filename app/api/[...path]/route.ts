@@ -1052,7 +1052,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
       .single<NoteRow>();
 
     if (error || !insertedNote) {
-      return errorResponse(error?.message ?? 'Failed to create note.', 500);
+      return errorResponse(humanizeDbError(error?.message), dbErrorStatus(error?.message));
     }
 
     return json(toNote(insertedNote), { status: 201 });
@@ -1103,7 +1103,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
       });
 
       if (versionError) {
-        return errorResponse(versionError.message, 500);
+        return errorResponse(humanizeDbError(versionError.message), dbErrorStatus(versionError.message));
       }
     }
 
@@ -1120,7 +1120,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
       .single<NoteRow>();
 
     if (updateError || !updatedNote) {
-      return errorResponse(updateError?.message ?? 'Failed to update note.', 500);
+      return errorResponse(humanizeDbError(updateError?.message), dbErrorStatus(updateError?.message));
     }
 
     return json(toNote(updatedNote));
@@ -1129,7 +1129,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
   if (noteId && segments.length === 2 && request.method === 'DELETE') {
     const { error } = await db.from('notes').delete().eq('id', noteId).eq('user_id', authContext.user.id);
     if (error) {
-      return errorResponse(error.message, 500);
+      return errorResponse(humanizeDbError(error.message), dbErrorStatus(error.message));
     }
 
     return new NextResponse(null, { status: 204 });
@@ -1165,7 +1165,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
       .single<NoteRow>();
 
     if (updateError || !updatedNote) {
-      return errorResponse(updateError?.message ?? 'Failed to share note.', 500);
+      return errorResponse(humanizeDbError(updateError?.message), dbErrorStatus(updateError?.message));
     }
 
     return json(toNote(updatedNote));
@@ -1179,7 +1179,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return errorResponse(error.message, 500);
+      return errorResponse(humanizeDbError(error.message), dbErrorStatus(error.message));
     }
 
     return json((versions ?? []).map(toNoteVersion));
@@ -1217,7 +1217,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
     });
 
     if (createVersionError) {
-      return errorResponse(createVersionError.message, 500);
+      return errorResponse(humanizeDbError(createVersionError.message), dbErrorStatus(createVersionError.message));
     }
 
     const { data: updatedNote, error: updateError } = await db
@@ -1231,7 +1231,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
       .single<NoteRow>();
 
     if (updateError || !updatedNote) {
-      return errorResponse(updateError?.message ?? 'Failed to restore note.', 500);
+      return errorResponse(humanizeDbError(updateError?.message), dbErrorStatus(updateError?.message));
     }
 
     return json(toNote(updatedNote));
@@ -1243,6 +1243,7 @@ async function handleNotes(request: NextRequest, segments: string[]) {
 async function handleFlashcards(request: NextRequest, segments: string[]) {
   const authContext = await requireAuthenticatedUser(request);
   const db = authContext.db;
+  const url = new URL(request.url);
 
   if (segments[1] === 'decks' && segments.length === 2 && request.method === 'GET') {
     return json(await getDecksWithCards(db, authContext.user.id));
@@ -1415,6 +1416,26 @@ async function handleFlashcards(request: NextRequest, segments: string[]) {
     }
 
     return new NextResponse(null, { status: 204 });
+  }
+
+  if (segments[1] === 'sessions' && segments.length === 2 && request.method === 'GET') {
+    const deckIdFilter = (url.searchParams.get('deckId') ?? '').trim();
+    let query = db
+      .from('study_sessions')
+      .select('*')
+      .eq('user_id', authContext.user.id)
+      .order('started_at', { ascending: false });
+
+    if (deckIdFilter) {
+      query = query.eq('deck_id', deckIdFilter);
+    }
+
+    const { data: sessions, error } = await query;
+    if (error) {
+      return errorResponse(error.message, 500);
+    }
+
+    return json((sessions ?? []).map(toStudySession));
   }
 
   if (segments[1] === 'sessions' && segments.length === 2 && request.method === 'POST') {

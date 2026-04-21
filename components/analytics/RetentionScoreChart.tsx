@@ -9,14 +9,10 @@ import {
 } from '@/components/ui/chart';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
 
-const chartData = [
-  { week: 'W1', score: 68 },
-  { week: 'W2', score: 72 },
-  { week: 'W3', score: 70 },
-  { week: 'W4', score: 75 },
-  { week: 'W5', score: 78 },
-  { week: 'W6', score: 82 },
-];
+interface RetentionScoreChartProps {
+  chartData: Array<{ week: string; score: number }>;
+  isLoading?: boolean;
+}
 
 const chartConfig: ChartConfig = {
   score: {
@@ -25,14 +21,19 @@ const chartConfig: ChartConfig = {
   },
 };
 
-export const RetentionScoreChart = () => {
+export const RetentionScoreChart = ({ chartData, isLoading = false }: RetentionScoreChartProps) => {
   return (
     <Card className="shadow-sm border border-gray-100">
       <div className="px-6 pt-5 pb-2">
         <h3 className="text-base font-semibold text-gray-900">Retention Score</h3>
       </div>
       <CardContent className="pb-5">
-        <ChartContainer config={chartConfig} className="h-[220px] w-full">
+        {isLoading ? (
+          <p className="text-sm text-gray-500">Loading retention score...</p>
+        ) : chartData.length === 0 ? (
+          <p className="text-sm text-gray-500">No retention data available yet.</p>
+        ) : (
+        <ChartContainer config={chartConfig} className="h-55 w-full">
           <LineChart data={chartData}>
             <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis
@@ -59,6 +60,7 @@ export const RetentionScoreChart = () => {
             />
           </LineChart>
         </ChartContainer>
+        )}
       </CardContent>
     </Card>
   );

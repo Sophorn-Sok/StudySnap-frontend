@@ -2,39 +2,31 @@
 
 import { FileText, Clock } from 'lucide-react';
 import Link from 'next/link';
+import { Note } from '@/types';
+import { getRelativeTime } from '@/utils/helpers';
 
-interface NoteItem {
-  id: string;
-  title: string;
-  timestamp: string;
-  size: string;
+interface RecentNotesProps {
+  notes: Note[];
+  isLoading?: boolean;
 }
 
-const mockNotes: NoteItem[] = [
-  {
-    id: '1',
-    title: 'Machine Learning Lecture Notes',
-    timestamp: '2 hours ago',
-    size: '1.2 MB',
-  },
-  {
-    id: '2',
-    title: 'Software Engineering Summary',
-    timestamp: '5 hours ago',
-    size: '845 KB',
-  },
-  {
-    id: '3',
-    title: 'Database Design Concepts',
-    timestamp: 'Yesterday',
-    size: '2.1 MB',
-  },
-];
+function formatSizeFromContent(content: string) {
+  const bytes = new TextEncoder().encode(content ?? '').length;
 
-const NoteRow = ({ note }: { note: NoteItem }) => {
+  if (bytes >= 1024 * 1024) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+
+const NoteRow = ({ note }: { note: Note }) => {
+  const timestamp = getRelativeTime(note.updatedAt);
+  const size = formatSizeFromContent(note.content);
+
   return (
     <Link
-      href={`/notes/${note.id}`}
+      href="/notes"
       className="flex items-center justify-between p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200 group cursor-pointer"
     >
       <div className="flex items-center gap-3">
@@ -45,16 +37,16 @@ const NoteRow = ({ note }: { note: NoteItem }) => {
           <h4 className="text-sm font-medium text-gray-900">{note.title}</h4>
           <p className="text-xs text-gray-500 flex items-center gap-1 mt-1">
             <Clock className="w-3 h-3" />
-            {note.timestamp}
+            {timestamp}
           </p>
         </div>
       </div>
-      <span className="text-xs text-gray-500">{note.size}</span>
+      <span className="text-xs text-gray-500">{size}</span>
     </Link>
   );
 };
 
-export const RecentNotes = () => {
+export const RecentNotes = ({ notes, isLoading = false }: RecentNotesProps) => {
   return (
     <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -64,9 +56,15 @@ export const RecentNotes = () => {
         </Link>
       </div>
       <div>
-        {mockNotes.map((note) => (
-          <NoteRow key={note.id} note={note} />
-        ))}
+        {isLoading && (
+          <div className="p-4 text-sm text-gray-500">Loading notes...</div>
+        )}
+
+        {!isLoading && notes.length === 0 && (
+          <div className="p-4 text-sm text-gray-500">No notes yet. Create your first note to see it here.</div>
+        )}
+
+        {!isLoading && notes.map((note) => <NoteRow key={note.id} note={note} />)}
       </div>
     </div>
   );

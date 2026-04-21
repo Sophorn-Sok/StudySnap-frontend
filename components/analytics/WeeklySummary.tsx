@@ -9,25 +9,32 @@ interface SummaryItem {
   text: string;
 }
 
-const summaryItems: SummaryItem[] = [
-  {
-    icon: <CalendarDays className="w-4 h-4 text-blue-600" />,
-    iconBgColor: 'bg-blue-100',
-    text: 'Studied 5 days this week',
-  },
-  {
-    icon: <TrendingUp className="w-4 h-4 text-green-600" />,
-    iconBgColor: 'bg-green-100',
-    text: 'Accuracy improved by 8%',
-  },
-  {
-    icon: <Layers className="w-4 h-4 text-purple-600" />,
-    iconBgColor: 'bg-purple-100',
-    text: 'Reviewed 120 cards',
-  },
-];
+interface WeeklySummaryProps {
+  studiedDays: number;
+  accuracyDelta: number;
+  reviewedCards: number;
+}
 
-export const WeeklySummary = () => {
+export const WeeklySummary = ({ studiedDays, accuracyDelta, reviewedCards }: WeeklySummaryProps) => {
+  const formattedDelta = `${accuracyDelta >= 0 ? '+' : ''}${accuracyDelta}%`;
+  const summaryItems: SummaryItem[] = [
+    {
+      icon: <CalendarDays className="w-4 h-4 text-blue-600" />,
+      iconBgColor: 'bg-blue-100',
+      text: `Studied ${studiedDays} day${studiedDays === 1 ? '' : 's'} this week`,
+    },
+    {
+      icon: <TrendingUp className="w-4 h-4 text-green-600" />,
+      iconBgColor: 'bg-green-100',
+      text: `Accuracy changed by ${formattedDelta} vs last week`,
+    },
+    {
+      icon: <Layers className="w-4 h-4 text-purple-600" />,
+      iconBgColor: 'bg-purple-100',
+      text: `Reviewed ${reviewedCards} cards this week`,
+    },
+  ];
+
   return (
     <Card className="shadow-sm border border-gray-100">
       <div className="px-6 pt-5 pb-2">

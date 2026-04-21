@@ -7,11 +7,12 @@ interface NotesStore {
   selectedNote: Note | null;
   isLoading: boolean;
   error: string | null;
-  fetchNotes: () => Promise<void>;
+  fetchNotes: (params?: { tags?: string[]; search?: string }) => Promise<void>;
   fetchNoteById: (id: string) => Promise<void>;
   createNote: (title: string, content: string, tags?: string[]) => Promise<Note>;
   updateNote: (id: string, updates: Partial<Note>) => Promise<Note>;
   deleteNote: (id: string) => Promise<void>;
+  shareNote: (id: string, userIds: string[]) => Promise<Note>;
   setSelectedNote: (note: Note | null) => void;
 }
 
@@ -21,10 +22,10 @@ export const useNotesStore = create<NotesStore>((set) => ({
   isLoading: false,
   error: null,
 
-  fetchNotes: async () => {
+  fetchNotes: async (params?: { tags?: string[]; search?: string }) => {
     set({ isLoading: true, error: null });
     try {
-      const notes = await notesService.getNotes();
+      const notes = await notesService.getNotes(params);
       set({ notes, isLoading: false });
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
@@ -73,6 +74,20 @@ export const useNotesStore = create<NotesStore>((set) => ({
         notes: state.notes.filter((n) => n.id !== id),
         selectedNote: state.selectedNote?.id === id ? null : state.selectedNote,
       }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  shareNote: async (id: string, userIds: string[]) => {
+    try {
+      const note = await notesService.shareNote(id, userIds);
+      set((state) => ({
+        notes: state.notes.map((n) => (n.id === id ? note : n)),
+        selectedNote: state.selectedNote?.id === id ? note : state.selectedNote,
+      }));
+      return note;
     } catch (error) {
       set({ error: (error as Error).message });
       throw error;

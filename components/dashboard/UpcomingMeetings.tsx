@@ -1,11 +1,13 @@
 'use client';
 
-import { Video, Plus } from 'lucide-react';
+import { Video } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
+import { Meeting } from '@/types';
+import { formatDate } from '@/utils/helpers';
 
-interface Meeting {
+interface UpcomingMeetingView {
   id: string;
   title: string;
   startTime: string;
@@ -13,24 +15,44 @@ interface Meeting {
   dateLabel: string;
 }
 
-const mockMeetings: Meeting[] = [
-  {
-    id: '1',
-    title: 'AI Lecture',
-    startTime: '10:00 AM',
-    endTime: '11:30 AM',
-    dateLabel: 'Today',
-  },
-  {
-    id: '2',
-    title: 'Software Engineering Discussion',
-    startTime: '2:00 PM',
-    endTime: '3:00 PM',
-    dateLabel: 'Tomorrow',
-  },
-];
+interface UpcomingMeetingsProps {
+  meetings: Meeting[];
+  isLoading?: boolean;
+}
 
-const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
+function formatTime(date: Date) {
+  return date.toLocaleTimeString([], {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function dateLabelFor(date: Date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const dayDiff = Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (dayDiff === 0) return 'Today';
+  if (dayDiff === 1) return 'Tomorrow';
+  return formatDate(date);
+}
+
+function toMeetingView(meeting: Meeting): UpcomingMeetingView {
+  const start = new Date(meeting.createdAt);
+  const durationMinutes = Math.max(30, Math.round((meeting.duration ?? 0) / 60));
+  const end = new Date(start.getTime() + durationMinutes * 60 * 1000);
+
+  return {
+    id: meeting.id,
+    title: meeting.title,
+    startTime: formatTime(start),
+    endTime: formatTime(end),
+    dateLabel: dateLabelFor(start),
+  };
+}
+
+const MeetingCard = ({ meeting }: { meeting: UpcomingMeetingView }) => {
   return (
     <Card className="p-6 border border-gray-200 shadow-none! rounded-lg">
       <div className="flex gap-4">
@@ -48,20 +70,24 @@ const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-white text-gray-700 border-gray-200 hover:bg-gray-50 h-7 px-4 text-sm font-medium"
-            >
-              Join
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              className="bg-blue-100 text-blue-600 hover:bg-blue-200 h-7 px-4 text-sm font-medium"
-            >
-              Auto-Transcribe
-            </Button>
+            <Link href={`/meetings/${meeting.id}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-white text-gray-700 border-gray-200 hover:bg-gray-50 h-7 px-4 text-sm font-medium"
+              >
+                Join
+              </Button>
+            </Link>
+            <Link href={`/meetings/${meeting.id}`}>
+              <Button
+                variant="primary"
+                size="sm"
+                className="bg-blue-100 text-blue-600 hover:bg-blue-200 h-7 px-4 text-sm font-medium"
+              >
+                Auto-Transcribe
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
@@ -69,7 +95,9 @@ const MeetingCard = ({ meeting }: { meeting: Meeting }) => {
   );
 };
 
-export const UpcomingMeetings = () => {
+export const UpcomingMeetings = ({ meetings, isLoading = false }: UpcomingMeetingsProps) => {
+  const upcomingMeetings = meetings.slice(0, 2).map(toMeetingView);
+
   return (
     <Card className="p-6 border border-gray-200 shadow-none! rounded-lg">
       <div className="flex items-center justify-between mb-6">
@@ -77,9 +105,13 @@ export const UpcomingMeetings = () => {
       </div>
 
       <div className="space-y-4">
-        {mockMeetings.map((meeting) => (
-          <MeetingCard key={meeting.id} meeting={meeting} />
-        ))}
+        {isLoading && <p className="text-sm text-gray-500">Loading meetings...</p>}
+
+        {!isLoading && upcomingMeetings.length === 0 && (
+          <p className="text-sm text-gray-500">No meetings yet.</p>
+        )}
+
+        {!isLoading && upcomingMeetings.map((meeting) => <MeetingCard key={meeting.id} meeting={meeting} />)}
       </div>
     </Card>
   );

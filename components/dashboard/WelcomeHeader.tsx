@@ -1,11 +1,11 @@
 'use client';
 
-import { Zap } from 'lucide-react';
+interface WelcomeHeaderProps {
+  userName: string;
+  meetingsToday: number;
+}
 
-export const WelcomeHeader = () => {
-  const userName = 'Hour';
-  const meetingsToday = 2;
-
+export const WelcomeHeader = ({ userName, meetingsToday }: WelcomeHeaderProps) => {
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-2">

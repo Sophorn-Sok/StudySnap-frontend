@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Meeting } from '@/types';
+import { AIGeneratedNotes, Meeting } from '@/types';
 import { meetingsService } from '@/services/meetings.api';
 
 interface MeetingsStore {
@@ -12,6 +12,8 @@ interface MeetingsStore {
   createMeeting: (title: string, transcript: string, duration: number) => Promise<Meeting>;
   updateMeeting: (id: string, updates: Partial<Meeting>) => Promise<Meeting>;
   deleteMeeting: (id: string) => Promise<void>;
+  generateMeetingNotes: (id: string) => Promise<AIGeneratedNotes>;
+  uploadMeetingRecording: (id: string, file: File) => Promise<{ recordingUrl: string }>;
   setSelectedMeeting: (meeting: Meeting | null) => void;
 }
 
@@ -73,6 +75,51 @@ export const useMeetingsStore = create<MeetingsStore>((set) => ({
         meetings: state.meetings.filter((m) => m.id !== id),
         selectedMeeting: state.selectedMeeting?.id === id ? null : state.selectedMeeting,
       }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  generateMeetingNotes: async (id: string) => {
+    try {
+      set({ error: null });
+      const generated = await meetingsService.generateAINotes(id);
+      const notesText = `${generated.summary}\n\nKey points:\n- ${generated.keyPoints.join('\n- ')}\n\nAction items:\n- ${generated.actionItems.join('\n- ')}`;
+
+      set((state) => ({
+        meetings: state.meetings.map((meeting) =>
+          meeting.id === id ? { ...meeting, aiNotes: notesText } : meeting
+        ),
+        selectedMeeting:
+          state.selectedMeeting?.id === id
+            ? { ...state.selectedMeeting, aiNotes: notesText }
+            : state.selectedMeeting,
+      }));
+
+      return generated;
+    } catch (error) {
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  uploadMeetingRecording: async (id: string, file: File) => {
+    try {
+      set({ error: null });
+      const uploaded = await meetingsService.uploadRecording(id, file);
+
+      set((state) => ({
+        meetings: state.meetings.map((meeting) =>
+          meeting.id === id ? { ...meeting, recordingUrl: uploaded.recordingUrl } : meeting
+        ),
+        selectedMeeting:
+          state.selectedMeeting?.id === id
+            ? { ...state.selectedMeeting, recordingUrl: uploaded.recordingUrl }
+            : state.selectedMeeting,
+      }));
+
+      return uploaded;
     } catch (error) {
       set({ error: (error as Error).message });
       throw error;
