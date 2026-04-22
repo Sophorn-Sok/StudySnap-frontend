@@ -763,29 +763,7 @@ async function handleAuth(request: NextRequest, segments: string[]) {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to send OTP email.';
 
-      if (isResendDomainRestriction(message) || isRateLimitedError(message)) {
-        try {
-          // Resend rejected delivery, so use Supabase OTP and remove local OTP record.
-          await db
-            .from('email_otps')
-            .delete()
-            .eq('email', email)
-            .eq('purpose', purpose)
-            .is('consumed_at', null);
-
-          await sendSupabaseOtp(email, purpose);
-
-          return json({
-            message: 'OTP sent to your email.',
-            delivery: 'email',
-          });
-        } catch (fallbackError) {
-          const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'Failed to send OTP email.';
-          return errorResponse(humanizeOtpProviderError(fallbackMessage), otpSendErrorStatus(fallbackMessage));
-        }
-      }
-
-      // Remove generated OTP if delivery fails so users cannot verify a code they never received.
+      // Resend delivery failed; remove local OTP and fall back to Supabase OTP delivery.
       await db
         .from('email_otps')
         .delete()
@@ -793,7 +771,20 @@ async function handleAuth(request: NextRequest, segments: string[]) {
         .eq('purpose', purpose)
         .is('consumed_at', null);
 
-      return errorResponse(humanizeOtpProviderError(message), otpSendErrorStatus(message));
+      try {
+        await sendSupabaseOtp(email, purpose);
+
+        return json({
+          message: isResendDomainRestriction(message) || isRateLimitedError(message)
+            ? 'OTP sent to your email.'
+            : 'Primary email provider failed, OTP sent via fallback provider.',
+          delivery: 'email',
+        });
+      } catch (fallbackError) {
+        const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'Failed to send OTP email.';
+        const mergedMessage = `${humanizeOtpProviderError(message)} Fallback error: ${humanizeOtpProviderError(fallbackMessage)}`;
+        return errorResponse(mergedMessage, otpSendErrorStatus(fallbackMessage));
+      }
     }
   }
 
