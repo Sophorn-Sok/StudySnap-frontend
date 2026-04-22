@@ -64,12 +64,27 @@ export default function LoginPage() {
         setError('');
         return;
       } else {
-        await login(email, password);
+        await login(email.trim(), password);
       }
 
       router.push('/dashboard');
     } catch (err) {
-      setError((err as Error).message);
+      const message = (err as Error).message;
+
+      // If password auth fails, offer a smooth fallback to magic-link login.
+      if (!useOtp && /invalid email or password/i.test(message) && email.trim()) {
+        try {
+          const response = await requestOtp(email.trim(), 'login');
+          setUseOtp(true);
+          setOtpMessage(response.message);
+          setError('Password login failed. We sent you a sign-in link to continue.');
+          return;
+        } catch {
+          // Fall through to surface original password error.
+        }
+      }
+
+      setError(message);
     }
   };
 

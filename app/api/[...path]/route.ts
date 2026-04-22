@@ -119,6 +119,31 @@ type UserPayload = {
   updatedAt: string;
 };
 
+async function findAuthUserByEmail(email: string) {
+  const admin = createSupabaseAdminClient();
+  let page = 1;
+
+  while (page <= 10) {
+    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    if (error) {
+      return null;
+    }
+
+    const user = data?.users?.find((candidate) => String(candidate.email ?? '').toLowerCase() === email);
+    if (user) {
+      return user;
+    }
+
+    if (!data?.users || data.users.length < 200) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return null;
+}
+
 type DbClient = ReturnType<typeof createSupabaseAdminClient>;
 
 function json(body: unknown, init?: ResponseInit) {
@@ -787,7 +812,26 @@ async function handleAuth(request: NextRequest, segments: string[]) {
 
       try {
         const passwordHash = await hashPassword(password);
-        await sendSupabaseOtp(request, email, purpose, { username, passwordHash });
+        const timestamp = new Date().toISOString();
+        const { error: insertError } = await db.from('app_users').insert({
+          email,
+          username,
+          password_hash: passwordHash,
+          created_at: timestamp,
+          updated_at: timestamp,
+        });
+
+        if (insertError) {
+          return errorResponse(humanizeDbError(insertError.message), dbErrorStatus(insertError.message));
+        }
+
+        try {
+          await sendSupabaseOtp(request, email, purpose, { username, passwordHash });
+        } catch (sendError) {
+          // Roll back created app profile when confirmation email fails.
+          await db.from('app_users').delete().eq('email', email).eq('username', username);
+          throw sendError;
+        }
 
         return json({
           message: 'Confirmation link sent to your email. Click the link to complete sign up.',
@@ -1048,13 +1092,27 @@ async function handleAuth(request: NextRequest, segments: string[]) {
       .eq('email', email)
       .maybeSingle<AppUserRow>();
 
-    if (error || !user) {
-      return errorResponse('Invalid email or password.', 401);
+    if (error) {
+      return errorResponse(humanizeDbError(error.message), dbErrorStatus(error.message));
+    }
+
+    if (!user) {
+      const authUser = await findAuthUserByEmail(email);
+
+      if (authUser && !authUser.email_confirmed_at) {
+        return errorResponse('Your account is not confirmed yet. Please click the confirmation link in your email first.', 401);
+      }
+
+      if (authUser && authUser.email_confirmed_at) {
+        return errorResponse('Your account setup is incomplete. Use email-link sign-in once to finish setup.', 401);
+      }
+
+      return errorResponse('Invalid email or password. You can also use email-link sign-in.', 401);
     }
 
     const passwordValid = await verifyPassword(password, user.password_hash);
     if (!passwordValid) {
-      return errorResponse('Invalid email or password.', 401);
+      return errorResponse('Invalid email or password. You can also use email-link sign-in.', 401);
     }
 
     const token = await createSession(db, user.id);
