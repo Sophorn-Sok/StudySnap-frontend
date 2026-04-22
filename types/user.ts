@@ -18,7 +18,7 @@ export type OtpPurpose = 'register' | 'login';
 
 export interface OtpRequestResponse {
   message: string;
-  delivery: 'email';
+  delivery: 'email' | 'email_link';
 }
 
 export interface AuthResponse {

@@ -11,7 +11,12 @@ interface AuthStore {
   loginWithOtp: (email: string, otp: string) => Promise<void>;
   register: (email: string, password: string, username: string) => Promise<void>;
   registerWithOtp: (email: string, password: string, username: string, otp: string) => Promise<void>;
-  requestOtp: (email: string, purpose: OtpPurpose) => Promise<OtpRequestResponse>;
+  requestOtp: (
+    email: string,
+    purpose: OtpPurpose,
+    payload?: { username?: string; password?: string }
+  ) => Promise<OtpRequestResponse>;
+  completeMagicLink: (accessToken: string, purpose: OtpPurpose) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User | null) => void;
   setToken: (token: string | null) => void;
@@ -92,12 +97,28 @@ export const useAuthStore = create<AuthStore>((set) => ({
     }
   },
 
-  requestOtp: async (email: string, purpose: OtpPurpose) => {
+  requestOtp: async (email: string, purpose: OtpPurpose, payload?: { username?: string; password?: string }) => {
     set({ error: null });
     try {
-      return await authService.requestOtp(email, purpose);
+      return await authService.requestOtp(email, purpose, payload);
     } catch (error) {
       set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  completeMagicLink: async (accessToken: string, purpose: OtpPurpose) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response: AuthResponse = await authService.completeMagicLink({ accessToken, purpose });
+      set({ user: response.user, token: response.token, isLoading: false });
+
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
+      }
+    } catch (error) {
+      set({ error: (error as Error).message, isLoading: false });
       throw error;
     }
   },

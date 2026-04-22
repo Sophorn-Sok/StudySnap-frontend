@@ -23,13 +23,12 @@ import {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [otpMessage, setOtpMessage] = useState('');
   const [useOtp, setUseOtp] = useState(false);
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login, loginWithOtp, requestOtp, isLoading } = useAuthStore();
+  const { login, requestOtp, isLoading } = useAuthStore();
   const router = useRouter();
 
   const handleRequestOtp = async () => {
@@ -56,12 +55,14 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       if (useOtp) {
-        if (!otp.trim()) {
-          setError('Please request and enter OTP first.');
+        if (!email.trim()) {
+          setError('Please enter your email first.');
           return;
         }
-
-        await loginWithOtp(email, otp.trim());
+        const response = await requestOtp(email, 'login');
+        setOtpMessage(response.message);
+        setError('');
+        return;
       } else {
         await login(email, password);
       }
@@ -210,10 +211,11 @@ export default function LoginPage() {
                     onClick={() => {
                       setUseOtp(!useOtp);
                       setError('');
+                      setOtpMessage('');
                     }}
                     className="text-blue-600 hover:underline"
                   >
-                    {useOtp ? 'Use password instead' : 'Use OTP instead'}
+                    {useOtp ? 'Use password instead' : 'Use email link instead'}
                   </button>
                 </div>
 
@@ -241,13 +243,17 @@ export default function LoginPage() {
                   </div>
                 ) : (
                   <div className="space-y-3">
+                    <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      Send a confirmation link to your email, then click it to sign in automatically.
+                    </p>
+
                     <Button
                       type="button"
                       onClick={handleRequestOtp}
                       isLoading={isRequestingOtp}
                       className="w-full py-2 px-4 border border-blue-300 bg-white text-blue-700 hover:bg-blue-50 rounded-lg"
                     >
-                      Request OTP
+                      Send Sign-In Link
                     </Button>
 
                     {otpMessage && (
@@ -255,20 +261,6 @@ export default function LoginPage() {
                         {otpMessage}
                       </p>
                     )}
-
-                    <div className="relative">
-                      <label className="text-sm font-semibold text-gray-700 block mb-2">OTP Code</label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                        placeholder="Enter 6-digit OTP"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        maxLength={6}
-                        required
-                      />
-                    </div>
                   </div>
                 )}
 
@@ -292,7 +284,7 @@ export default function LoginPage() {
                   isLoading={isLoading}
                   className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                 >
-                  {useOtp ? 'Verify OTP and Sign In' : 'Sign In'}
+                  {useOtp ? 'Send Sign-In Link' : 'Sign In'}
                 </Button>
 
                 {/* Divider */}

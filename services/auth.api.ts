@@ -12,8 +12,24 @@ export const authService = {
     return response.data;
   },
 
-  async requestOtp(email: string, purpose: OtpPurpose): Promise<OtpRequestResponse> {
-    const response = await api.post<OtpRequestResponse>('/auth/request-otp', { email, purpose });
+  async requestOtp(
+    email: string,
+    purpose: OtpPurpose,
+    payload?: { username?: string; password?: string }
+  ): Promise<OtpRequestResponse> {
+    const response = await api.post<OtpRequestResponse>('/auth/request-otp', {
+      email,
+      purpose,
+      ...payload,
+    });
+    return response.data;
+  },
+
+  async completeMagicLink(payload: {
+    accessToken: string;
+    purpose: OtpPurpose;
+  }): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/magic-complete', payload);
     return response.data;
   },
 

@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/store';
 import {
@@ -26,41 +25,19 @@ export default function RegisterPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [otp, setOtp] = useState('');
   const [otpMessage, setOtpMessage] = useState('');
   const [isRequestingOtp, setIsRequestingOtp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
-  const { requestOtp, registerWithOtp, isLoading } = useAuthStore();
-  const router = useRouter();
-
-  const handleRequestOtp = async () => {
-    setError('');
-    setOtpMessage('');
-
-    if (!email) {
-      setError('Please enter your email first.');
-      return;
-    }
-
-    setIsRequestingOtp(true);
-    try {
-      const response = await requestOtp(email, 'register');
-      setOtpMessage(response.message);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setIsRequestingOtp(false);
-    }
-  };
+  const { requestOtp, isLoading } = useAuthStore();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (!otp.trim()) {
-      setError('Please request and enter OTP before signing up.');
+    if (!email.trim() || !username.trim() || !password) {
+      setError('Email, username, and password are required.');
       return;
     }
 
@@ -68,11 +45,24 @@ export default function RegisterPage() {
       setError('Passwords do not match');
       return;
     }
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
+      return;
+    }
+
     try {
-      await registerWithOtp(email, password, username, otp.trim());
-      router.push('/dashboard');
+      setIsRequestingOtp(true);
+      const response = await requestOtp(email, 'register', {
+        username,
+        password,
+      });
+      setOtpMessage(response.message);
+      setError('');
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setIsRequestingOtp(false);
     }
   };
 
@@ -272,43 +262,22 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                {/* Sign Up Button */}
-                <div className="space-y-2">
-                  <Button
-                    type="button"
-                    onClick={handleRequestOtp}
-                    isLoading={isRequestingOtp}
-                    className="w-full py-2 px-4 border border-blue-300 bg-white text-blue-700 hover:bg-blue-50 rounded-lg"
-                  >
-                    Request OTP
-                  </Button>
-                  {otpMessage && (
-                    <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-2">
-                      {otpMessage}
-                    </p>
-                  )}
-                </div>
+                <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  We will email you a confirmation link. Click it to finish sign up.
+                </p>
 
-                <div className="relative">
-                  <label className="text-sm font-semibold text-gray-700 block mb-2">OTP Code</label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Enter 6-digit OTP"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    maxLength={6}
-                    required
-                  />
-                </div>
+                {otpMessage && (
+                  <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-2">
+                    {otpMessage}
+                  </p>
+                )}
 
                 <Button 
                   type="submit" 
-                  isLoading={isLoading}
+                  isLoading={isLoading || isRequestingOtp}
                   className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                 >
-                  Verify OTP and Sign Up
+                  Send Confirmation Link
                 </Button>
 
                 {/* Divider */}

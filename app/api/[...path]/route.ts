@@ -207,6 +207,12 @@ function hasResendConfig() {
   return Boolean(process.env.RESEND_API_KEY && process.env.OTP_FROM_EMAIL);
 }
 
+function buildMagicLinkRedirectUrl(request: NextRequest, purpose: OtpPurpose) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const origin = appUrl && appUrl.length > 0 ? appUrl.replace(/\/$/, '') : request.nextUrl.origin;
+  return `${origin}/auth/callback?purpose=${purpose}`;
+}
+
 function parseSegments(context: RouteContext) {
   return Promise.resolve(context.params).then((params) => params.path ?? []);
 }
@@ -248,6 +254,37 @@ function isValidOtpPurpose(value: unknown): value is OtpPurpose {
 
 function generateOtpCode() {
   return String(randomBytes(3).readUIntBE(0, 3) % 900000).padStart(6, '0');
+}
+
+function normalizeUsernameCandidate(value: string) {
+  const normalized = value
+    .toLowerCase()
+    .replace(/[^a-z0-9_]/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 24);
+
+  return normalized || 'user';
+}
+
+async function createUniqueUsername(db: DbClient, preferred: string) {
+  const base = normalizeUsernameCandidate(preferred);
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const suffix = attempt === 0 ? '' : `_${Math.floor(1000 + Math.random() * 9000)}`;
+    const candidate = `${base}${suffix}`.slice(0, 24);
+    const { data: existingUser } = await db
+      .from('app_users')
+      .select('id')
+      .eq('username', candidate)
+      .maybeSingle();
+
+    if (!existingUser) {
+      return candidate;
+    }
+  }
+
+  return `user_${randomBytes(3).toString('hex')}`;
 }
 
 function hashOtp(email: string, purpose: OtpPurpose, otp: string) {
@@ -300,12 +337,25 @@ async function sendOtpEmail(email: string, purpose: OtpPurpose, otp: string) {
   return true;
 }
 
-async function sendSupabaseOtp(email: string, purpose: OtpPurpose) {
+async function sendSupabaseOtp(
+  request: NextRequest,
+  email: string,
+  purpose: OtpPurpose,
+  registerData?: { username: string; passwordHash: string }
+) {
   const supabase = createSupabaseClient();
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: purpose === 'register',
+      emailRedirectTo: buildMagicLinkRedirectUrl(request, purpose),
+      data:
+        purpose === 'register' && registerData
+          ? {
+              app_username: registerData.username,
+              app_password_hash: registerData.passwordHash,
+            }
+          : undefined,
     },
   });
 
@@ -708,6 +758,8 @@ async function handleAuth(request: NextRequest, segments: string[]) {
   if (action === 'request-otp' && request.method === 'POST') {
     const email = String((body as { email?: string }).email ?? '').trim().toLowerCase();
     const purpose = (body as { purpose?: string }).purpose;
+    const username = String((body as { username?: string }).username ?? '').trim();
+    const password = String((body as { password?: string }).password ?? '');
 
     if (!email || !isValidOtpPurpose(purpose)) {
       return errorResponse('Email and a valid OTP purpose are required.', 400);
@@ -715,14 +767,35 @@ async function handleAuth(request: NextRequest, segments: string[]) {
 
     const db = createSupabaseAdminClient();
     if (purpose === 'register') {
+      if (!username || !password) {
+        return errorResponse('Username and password are required before sending confirmation email.', 400);
+      }
+
+      if (password.length < 8) {
+        return errorResponse('Password must be at least 8 characters long.', 400);
+      }
+
       const { data: existingUser } = await db
         .from('app_users')
         .select('id')
-        .eq('email', email)
+        .or(`email.eq.${email},username.eq.${username}`)
         .maybeSingle();
 
       if (existingUser) {
-        return errorResponse('An account with this email already exists.', 409);
+        return errorResponse('An account with that email or username already exists.', 409);
+      }
+
+      try {
+        const passwordHash = await hashPassword(password);
+        await sendSupabaseOtp(request, email, purpose, { username, passwordHash });
+
+        return json({
+          message: 'Confirmation link sent to your email. Click the link to complete sign up.',
+          delivery: 'email_link',
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to send confirmation email.';
+        return errorResponse(humanizeOtpProviderError(message), otpSendErrorStatus(message));
       }
     }
 
@@ -736,54 +809,16 @@ async function handleAuth(request: NextRequest, segments: string[]) {
       if (!user) {
         return errorResponse('No account found for this email.', 404);
       }
-    }
 
-    if (!hasResendConfig()) {
       try {
-        await sendSupabaseOtp(email, purpose);
+        await sendSupabaseOtp(request, email, purpose);
         return json({
-          message: 'OTP sent to your email.',
-          delivery: 'email',
+          message: 'Sign-in link sent to your email. Click the link to sign in.',
+          delivery: 'email_link',
         });
       } catch (error) {
-        const message = error instanceof Error ? error.message : 'Failed to send OTP email.';
+        const message = error instanceof Error ? error.message : 'Failed to send sign-in email.';
         return errorResponse(message, otpSendErrorStatus(message));
-      }
-    }
-
-    const otp = await createOtp(db, email, purpose);
-
-    try {
-      await sendOtpEmail(email, purpose, otp);
-
-      return json({
-        message: 'OTP sent to your email.',
-        delivery: 'email',
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to send OTP email.';
-
-      // Resend delivery failed; remove local OTP and fall back to Supabase OTP delivery.
-      await db
-        .from('email_otps')
-        .delete()
-        .eq('email', email)
-        .eq('purpose', purpose)
-        .is('consumed_at', null);
-
-      try {
-        await sendSupabaseOtp(email, purpose);
-
-        return json({
-          message: isResendDomainRestriction(message) || isRateLimitedError(message)
-            ? 'OTP sent to your email.'
-            : 'Primary email provider failed, OTP sent via fallback provider.',
-          delivery: 'email',
-        });
-      } catch (fallbackError) {
-        const fallbackMessage = fallbackError instanceof Error ? fallbackError.message : 'Failed to send OTP email.';
-        const mergedMessage = `${humanizeOtpProviderError(message)} Fallback error: ${humanizeOtpProviderError(fallbackMessage)}`;
-        return errorResponse(mergedMessage, otpSendErrorStatus(fallbackMessage));
       }
     }
   }
@@ -860,6 +895,86 @@ async function handleAuth(request: NextRequest, segments: string[]) {
 
       const token = await createSession(db, insertedUser.id);
       return json({ user: toUserPayload(insertedUser), token, refreshToken: token });
+    }
+
+    const { data: existingUser, error: existingUserError } = await db
+      .from('app_users')
+      .select('*')
+      .eq('email', email)
+      .maybeSingle<AppUserRow>();
+
+    if (existingUserError || !existingUser) {
+      return errorResponse('No account found for this email.', 404);
+    }
+
+    const token = await createSession(db, existingUser.id);
+    return json({ user: toUserPayload(existingUser), token, refreshToken: token });
+  }
+
+  if (action === 'magic-complete' && request.method === 'POST') {
+    const accessToken = String((body as { accessToken?: string }).accessToken ?? '').trim();
+    const purpose = (body as { purpose?: string }).purpose;
+
+    if (!accessToken || !isValidOtpPurpose(purpose)) {
+      return errorResponse('A valid access token and purpose are required.', 400);
+    }
+
+    const supabase = createSupabaseClient();
+    const { data: supabaseUser, error: supabaseUserError } = await supabase.auth.getUser(accessToken);
+
+    if (supabaseUserError || !supabaseUser.user?.email) {
+      return errorResponse('This confirmation link is invalid or expired.', 400);
+    }
+
+    const email = String(supabaseUser.user.email).toLowerCase();
+    const db = createSupabaseAdminClient();
+
+    if (purpose === 'register') {
+      const { data: existingUser, error: existingUserError } = await db
+        .from('app_users')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle<AppUserRow>();
+
+      if (existingUserError) {
+        return errorResponse(humanizeDbError(existingUserError.message), dbErrorStatus(existingUserError.message));
+      }
+
+      let appUser = existingUser;
+
+      if (!appUser) {
+        const metadata = (supabaseUser.user.user_metadata ?? {}) as Record<string, unknown>;
+        const metadataUsername = String(metadata.app_username ?? '').trim();
+        const metadataPasswordHash = String(metadata.app_password_hash ?? '').trim();
+        const baseUsername = metadataUsername || email.split('@')[0] || 'user';
+        const username = await createUniqueUsername(db, baseUsername);
+        const passwordHash =
+          metadataPasswordHash.includes(':')
+            ? metadataPasswordHash
+            : await hashPassword(randomBytes(16).toString('hex'));
+        const timestamp = new Date().toISOString();
+
+        const { data: insertedUser, error: insertError } = await db
+          .from('app_users')
+          .insert({
+            email,
+            username,
+            password_hash: passwordHash,
+            created_at: timestamp,
+            updated_at: timestamp,
+          })
+          .select('*')
+          .single<AppUserRow>();
+
+        if (insertError || !insertedUser) {
+          return errorResponse(humanizeDbError(insertError?.message), dbErrorStatus(insertError?.message));
+        }
+
+        appUser = insertedUser;
+      }
+
+      const token = await createSession(db, appUser.id);
+      return json({ user: toUserPayload(appUser), token, refreshToken: token });
     }
 
     const { data: existingUser, error: existingUserError } = await db
