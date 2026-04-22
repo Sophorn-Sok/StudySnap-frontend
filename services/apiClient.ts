@@ -31,8 +31,17 @@ class ApiClient {
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401 && typeof window !== 'undefined') {
-          // Handle unauthorized - redirect to login
+        const status = error.response?.status;
+        const requestUrl = String(error.config?.url ?? '');
+        const isAuthEndpoint =
+          requestUrl.includes('/auth/login') ||
+          requestUrl.includes('/auth/register') ||
+          requestUrl.includes('/auth/request-otp') ||
+          requestUrl.includes('/auth/verify-otp') ||
+          requestUrl.includes('/auth/magic-complete');
+
+        if (status === 401 && typeof window !== 'undefined' && !isAuthEndpoint) {
+          // For protected endpoints, clear stale auth and return to login.
           localStorage.removeItem('authToken');
           localStorage.removeItem('currentUser');
           window.location.href = '/login';
