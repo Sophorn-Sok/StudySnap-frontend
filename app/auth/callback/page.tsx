@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { createClient } from '@supabase/supabase-js';
 import { useAuthStore } from '@/store';
 import type { OtpPurpose } from '@/types';
 
@@ -14,6 +15,23 @@ function parseAccessTokenFromHash() {
   const hash = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
   const hashParams = new URLSearchParams(hash);
   return hashParams.get('access_token') ?? '';
+}
+
+function createBrowserSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing Supabase environment variables.');
+  }
+
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
 }
 
 function AuthCallbackContent() {
@@ -28,7 +46,25 @@ function AuthCallbackContent() {
     const complete = async () => {
       const rawPurpose = searchParams.get('purpose');
       const purpose: OtpPurpose = rawPurpose === 'register' ? 'register' : 'login';
-      const accessToken = parseAccessTokenFromHash();
+      const code = searchParams.get('code') ?? '';
+      let accessToken = parseAccessTokenFromHash();
+
+      if (!accessToken && code) {
+        try {
+          const supabase = createBrowserSupabaseClient();
+          const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+          if (error || !data.session?.access_token) {
+            throw new Error(error?.message ?? 'Unable to exchange confirmation code.');
+          }
+
+          accessToken = data.session.access_token;
+        } catch (exchangeError) {
+          setError(exchangeError instanceof Error ? exchangeError.message : 'Unable to complete confirmation.');
+          setMessage('Unable to complete sign-in.');
+          return;
+        }
+      }
 
       if (!accessToken) {
         setError('This confirmation link is missing required token data. Please request a new link.');
