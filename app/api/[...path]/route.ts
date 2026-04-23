@@ -233,9 +233,41 @@ function hasResendConfig() {
 }
 
 function buildMagicLinkRedirectUrl(request: NextRequest, purpose: OtpPurpose) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  const origin = appUrl && appUrl.length > 0 ? appUrl.replace(/\/$/, '') : request.nextUrl.origin;
-  return `${origin}/auth/callback?purpose=${purpose}`;
+  const requestOrigin = request.nextUrl.origin.replace(/\/$/, '');
+  const explicitAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const vercelProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  const vercelPreviewUrl = process.env.VERCEL_URL?.trim();
+
+  const normalizeOrigin = (value?: string) => {
+    if (!value) {
+      return null;
+    }
+
+    const withProtocol = value.startsWith('http://') || value.startsWith('https://') ? value : `https://${value}`;
+
+    try {
+      const parsed = new URL(withProtocol);
+      return parsed.origin.replace(/\/$/, '');
+    } catch {
+      return null;
+    }
+  };
+
+  const requestHost = new URL(requestOrigin).hostname;
+  const candidates = [
+    normalizeOrigin(explicitAppUrl),
+    normalizeOrigin(vercelProductionUrl),
+    normalizeOrigin(vercelPreviewUrl),
+    requestOrigin,
+  ].filter((candidate): candidate is string => Boolean(candidate));
+
+  const preferred = candidates[0] ?? requestOrigin;
+  const preferredHost = new URL(preferred).hostname;
+
+  // Avoid sending production users to localhost if an env var was configured incorrectly.
+  const finalOrigin = preferredHost === 'localhost' && requestHost !== 'localhost' ? requestOrigin : preferred;
+
+  return `${finalOrigin}/auth/callback?purpose=${purpose}`;
 }
 
 function parseSegments(context: RouteContext) {
