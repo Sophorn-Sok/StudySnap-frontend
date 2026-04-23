@@ -119,6 +119,13 @@ type UserPayload = {
   updatedAt: string;
 };
 
+type TranscriptLine = {
+  seq: number;
+  text: string;
+  speaker: string | null;
+  timestamp: string;
+};
+
 async function findAuthUserByEmail(email: string) {
   const admin = createSupabaseAdminClient();
   let page = 1;
@@ -564,7 +571,7 @@ function toMeeting(row: MeetingRow) {
     id: row.id,
     userId: row.user_id,
     title: row.title,
-    transcript: row.transcript,
+    transcript: decodeTranscriptBlob(row.transcript),
     aiNotes: row.ai_notes ?? '',
     recordingUrl: row.recording_url ?? undefined,
     duration: row.duration ?? 0,
@@ -624,6 +631,63 @@ function buildFlashcardsFromText(text: string, count: number) {
   }
 
   return cards;
+}
+
+function decodeTranscriptBlob(raw: string) {
+  const normalized = String(raw ?? '').trim();
+  if (!normalized) {
+    return '';
+  }
+
+  const lines = normalized.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) {
+    return '';
+  }
+
+  const parsedLines = lines
+    .map((line) => {
+      const parts = line.split('\t');
+      if (parts.length !== 4 || !Number.isFinite(Number(parts[0]))) {
+        return null;
+      }
+
+      const seq = Number(parts[0]);
+      const timestamp = parts[1] || new Date().toISOString();
+      const speaker = decodeBlobField(parts[2]) || null;
+      const text = decodeBlobField(parts[3]);
+
+      if (!text.trim()) {
+        return null;
+      }
+
+      return { seq, timestamp, speaker, text } satisfies TranscriptLine;
+    })
+    .filter((entry): entry is TranscriptLine => Boolean(entry))
+    .sort((left, right) => left.seq - right.seq);
+
+  if (parsedLines.length > 0) {
+    return parsedLines
+      .map((line) => {
+        const speakerPrefix = line.speaker ? `${line.speaker}: ` : '';
+        return `${speakerPrefix}${line.text}`;
+      })
+      .join('\n');
+  }
+
+  return lines.join('\n');
+}
+
+function decodeBlobField(value: string) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  try {
+    return Buffer.from(trimmed, 'base64').toString('utf8');
+  } catch {
+    return trimmed;
+  }
 }
 
 async function createSession(db: DbClient, userId: string) {
@@ -2068,7 +2132,8 @@ async function handleAi(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const notes = buildSummary(meeting.transcript || meeting.title);
+    const transcriptText = decodeTranscriptBlob(meeting.transcript);
+    const notes = buildSummary(transcriptText || meeting.title);
     return json({ notes });
   }
 
