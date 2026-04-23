@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, CheckCircle2, Clock3, Play, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useFlashcardStore } from '@/store';
-import { Flashcard, StudySession } from '@/types';
+import { Flashcard, StudySession, Meeting } from '@/types';
 import { getRelativeTime } from '@/utils/helpers';
+import { meetingsService } from '@/services/meetings.api';
 
 export default function FlashcardsPageContent() {
   const {
@@ -17,6 +18,7 @@ export default function FlashcardsPageContent() {
     createDeck,
     deleteDeck,
     addCard,
+    generateDeckFromMeeting,
     deleteCard,
     startStudySession,
     completeStudySession,
@@ -35,10 +37,30 @@ export default function FlashcardsPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [selectedMeetingId, setSelectedMeetingId] = useState('');
+  const [aiSummary, setAiSummary] = useState('');
+  const [aiKeyPoints, setAiKeyPoints] = useState<string[]>([]);
 
   useEffect(() => {
     void fetchDecks();
   }, [fetchDecks]);
+
+  useEffect(() => {
+    const loadMeetings = async () => {
+      try {
+        const items = await meetingsService.getMeetings();
+        setMeetings(items);
+        if (items.length > 0) {
+          setSelectedMeetingId((current) => current || items[0].id);
+        }
+      } catch {
+        // Meeting fetch errors are surfaced when generating AI deck.
+      }
+    };
+
+    void loadMeetings();
+  }, []);
 
   useEffect(() => {
     if (!selectedDeck && decks.length > 0) {
@@ -177,6 +199,29 @@ export default function FlashcardsPageContent() {
     }
   };
 
+  const handleGenerateDeckFromTranscript = async () => {
+    if (!selectedMeetingId) {
+      setLocalError('Select a meeting transcript first.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+
+    try {
+      const generated = await generateDeckFromMeeting(selectedMeetingId);
+      setAiSummary(generated.summary);
+      setAiKeyPoints(generated.keyPoints);
+      setSelectedDeck(generated.deck);
+      setFeedback(`AI deck generated with ${generated.generatedCount} cards.`);
+    } catch (generationError) {
+      setLocalError((generationError as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteCard = async (card: Flashcard) => {
     if (!activeDeck) {
       return;
@@ -246,6 +291,38 @@ export default function FlashcardsPageContent() {
           <h2 className="text-lg font-bold">Flashcards</h2>
           <Button variant="outline" size="sm" onClick={() => setShowCreateDeckForm((current) => !current)}>
             <Plus size={14} /> New Deck
+          </Button>
+        </div>
+
+        <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
+          <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700">
+            <Sparkles size={14} /> AI from transcript
+          </div>
+
+          <select
+            value={selectedMeetingId}
+            onChange={(event) => setSelectedMeetingId(event.target.value)}
+            className="mb-2 w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+          >
+            {meetings.length === 0 ? (
+              <option value="">No meetings found</option>
+            ) : (
+              meetings.map((meeting) => (
+                <option key={meeting.id} value={meeting.id}>
+                  {meeting.title}
+                </option>
+              ))
+            )}
+          </select>
+
+          <Button
+            size="sm"
+            className="w-full"
+            onClick={handleGenerateDeckFromTranscript}
+            isLoading={isSubmitting}
+            disabled={meetings.length === 0}
+          >
+            <Sparkles size={14} /> Generate AI Deck
           </Button>
         </div>
 
@@ -488,6 +565,20 @@ export default function FlashcardsPageContent() {
           <div className="rounded-xl bg-blue-50 p-3">
             <p className="text-blue-700">Total Cards</p>
             <p className="text-xl font-bold text-blue-800">{stats.totalCards}</p>
+          </div>
+
+          <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
+            <p className="mb-1 text-indigo-700">AI Transcript Summary</p>
+            <p className="text-xs text-indigo-900">
+              {aiSummary || 'Generate an AI deck from a meeting transcript to see the summary here.'}
+            </p>
+            {aiKeyPoints.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs text-indigo-900">
+                {aiKeyPoints.slice(0, 4).map((point, index) => (
+                  <li key={`ai-key-point-${index}`}>• {point}</li>
+                ))}
+              </ul>
+            )}
           </div>
         </div>
       </aside>

@@ -1,7 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
-import { Flashcard, FlashcardDeck, StudySession } from '@/types';
+import { Flashcard, FlashcardDeck, StudySession, AIGeneratedDeckResponse } from '@/types';
 import { flashcardsService } from '@/services/flashcards.api';
 
 interface FlashcardStore {
@@ -17,6 +17,7 @@ interface FlashcardStore {
   updateDeck: (id: string, updates: Partial<FlashcardDeck>) => Promise<FlashcardDeck>;
   deleteDeck: (id: string) => Promise<void>;
   addCard: (deckId: string, front: string, back: string, difficulty?: 'easy' | 'medium' | 'hard') => Promise<Flashcard>;
+  generateDeckFromMeeting: (meetingId: string, options?: { title?: string; maxCards?: number }) => Promise<AIGeneratedDeckResponse>;
   deleteCard: (deckId: string, cardId: string) => Promise<void>;
   startStudySession: (deckId: string) => Promise<StudySession>;
   completeStudySession: (sessionId: string, correctAnswers: number) => Promise<StudySession>;
@@ -126,6 +127,30 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
       }));
 
       return card;
+    } catch (error) {
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  generateDeckFromMeeting: async (meetingId: string, options?: { title?: string; maxCards?: number }) => {
+    try {
+      set({ error: null });
+      const generated = await flashcardsService.generateDeckFromMeeting({
+        meetingId,
+        ...(options?.title ? { title: options.title } : {}),
+        ...(options?.maxCards ? { maxCards: options.maxCards } : {}),
+      });
+
+      set((state) => {
+        const nextDecks = [generated.deck, ...state.decks.filter((deck) => deck.id !== generated.deck.id)];
+        return {
+          decks: nextDecks,
+          selectedDeck: generated.deck,
+        };
+      });
+
+      return generated;
     } catch (error) {
       set({ error: (error as Error).message });
       throw error;

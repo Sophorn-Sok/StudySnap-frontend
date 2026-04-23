@@ -1479,6 +1479,89 @@ async function handleFlashcards(request: NextRequest, segments: string[]) {
     return json(createdDeck, { status: 201 });
   }
 
+  if (segments[1] === 'decks' && segments[2] === 'from-meeting' && segments.length === 3 && request.method === 'POST') {
+    const body = await request.json().catch(() => ({}));
+    const meetingId = String((body as { meetingId?: string }).meetingId ?? '').trim();
+    const requestedTitle = String((body as { title?: string }).title ?? '').trim();
+    const maxCardsRaw = Number((body as { maxCards?: number }).maxCards ?? 12);
+
+    if (!meetingId) {
+      return errorResponse('Meeting ID is required.', 400);
+    }
+
+    const { data: meeting, error: meetingError } = await db
+      .from('meetings')
+      .select('*')
+      .eq('id', meetingId)
+      .eq('user_id', authContext.user.id)
+      .maybeSingle<MeetingRow>();
+
+    if (meetingError || !meeting) {
+      return errorResponse('Meeting not found.', 404);
+    }
+
+    const transcriptSource = String(meeting.transcript ?? '').trim();
+    if (!transcriptSource) {
+      return errorResponse('This meeting has no transcript to summarize.', 400);
+    }
+
+    const summary = buildSummary(transcriptSource);
+    const keyPoints = extractKeywords(transcriptSource, 5);
+    const maxCards = Math.min(30, Math.max(5, Number.isFinite(maxCardsRaw) ? maxCardsRaw : 12));
+    const generatedCards = buildFlashcardsFromText(transcriptSource, maxCards);
+
+    const baseTitle = requestedTitle || `AI Deck • ${meeting.title}`;
+    const title = baseTitle.trim() || 'AI Deck';
+    const description =
+      summary.length > 180
+        ? `${summary.slice(0, 177)}...`
+        : summary;
+
+    const timestamp = new Date().toISOString();
+    const { data: deck, error: deckError } = await db
+      .from('flashcard_decks')
+      .insert({
+        user_id: authContext.user.id,
+        title,
+        description,
+        created_at: timestamp,
+        updated_at: timestamp,
+      })
+      .select('*')
+      .single<FlashcardDeckRow>();
+
+    if (deckError || !deck) {
+      return errorResponse(deckError?.message ?? 'Failed to create AI deck.', 500);
+    }
+
+    const { error: cardsError } = await db.from('flashcards').insert(
+      generatedCards.map((card) => ({
+        deck_id: deck.id,
+        front: card.front,
+        back: card.back,
+        difficulty: card.difficulty,
+        review_count: 0,
+      }))
+    );
+
+    if (cardsError) {
+      return errorResponse(cardsError.message, 500);
+    }
+
+    const createdDeck = await getDeckById(db, authContext.user.id, deck.id);
+    if (!createdDeck) {
+      return errorResponse('Deck not found after creation.', 404);
+    }
+
+    return json({
+      deck: createdDeck,
+      summary,
+      keyPoints,
+      sourceMeetingId: meeting.id,
+      generatedCount: generatedCards.length,
+    }, { status: 201 });
+  }
+
   if (segments[1] === 'decks' && segments[2] && segments.length === 3 && request.method === 'GET') {
     const deck = await getDeckById(db, authContext.user.id, segments[2]);
     if (!deck) {

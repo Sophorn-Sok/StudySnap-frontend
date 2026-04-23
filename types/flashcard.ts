@@ -39,3 +39,11 @@ export interface CreateCardPayload {
   back: string;
   difficulty?: 'easy' | 'medium' | 'hard';
 }
+
+export interface AIGeneratedDeckResponse {
+  deck: FlashcardDeck;
+  summary: string;
+  keyPoints: string[];
+  sourceMeetingId: string;
+  generatedCount: number;
+}

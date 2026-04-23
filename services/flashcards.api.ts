@@ -1,5 +1,5 @@
 import { api } from './apiClient';
-import { FlashcardDeck, Flashcard, StudySession, CreateDeckPayload, CreateCardPayload } from '@/types';
+import { FlashcardDeck, Flashcard, StudySession, CreateDeckPayload, CreateCardPayload, AIGeneratedDeckResponse } from '@/types';
 
 export const flashcardsService = {
   async getDecks(): Promise<FlashcardDeck[]> {
@@ -52,6 +52,15 @@ export const flashcardsService = {
 
   async getStudySessions(params?: { deckId?: string }): Promise<StudySession[]> {
     const response = await api.get<StudySession[]>('/flashcards/sessions', { params });
+    return response.data;
+  },
+
+  async generateDeckFromMeeting(payload: {
+    meetingId: string;
+    title?: string;
+    maxCards?: number;
+  }): Promise<AIGeneratedDeckResponse> {
+    const response = await api.post<AIGeneratedDeckResponse>('/flashcards/decks/from-meeting', payload);
     return response.data;
   },
 };
