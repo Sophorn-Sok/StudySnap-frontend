@@ -114,6 +114,7 @@ export default function MeetingTranscriptPage() {
     isLoading,
     error,
     fetchMeetingById,
+    refreshMeetingById,
     updateMeeting,
     generateMeetingNotes,
   } = useMeetingsStore();
@@ -129,6 +130,18 @@ export default function MeetingTranscriptPage() {
       void fetchMeetingById(meetingId);
     }
   }, [meetingId, fetchMeetingById]);
+
+  useEffect(() => {
+    if (!meetingId) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshMeetingById(meetingId);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [meetingId, refreshMeetingById]);
 
   useEffect(() => {
     setEditableAiNotes(selectedMeeting?.aiNotes ?? '');

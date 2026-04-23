@@ -9,6 +9,7 @@ interface MeetingsStore {
   error: string | null;
   fetchMeetings: () => Promise<void>;
   fetchMeetingById: (id: string) => Promise<void>;
+  refreshMeetingById: (id: string) => Promise<void>;
   createMeeting: (title: string, transcript: string, duration: number) => Promise<Meeting>;
   updateMeeting: (id: string, updates: Partial<Meeting>) => Promise<Meeting>;
   deleteMeeting: (id: string) => Promise<void>;
@@ -40,6 +41,18 @@ export const useMeetingsStore = create<MeetingsStore>((set) => ({
       set({ selectedMeeting: meeting, isLoading: false });
     } catch (error) {
       set({ error: (error as Error).message, isLoading: false });
+    }
+  },
+
+  refreshMeetingById: async (id: string) => {
+    try {
+      const meeting = await meetingsService.getMeetingById(id);
+      set((state) => ({
+        selectedMeeting: meeting,
+        meetings: state.meetings.map((item) => (item.id === id ? meeting : item)),
+      }));
+    } catch (error) {
+      set({ error: (error as Error).message });
     }
   },
 
