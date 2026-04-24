@@ -658,6 +658,35 @@ function decodeTranscriptBlob(raw: string) {
     return '';
   }
 
+  try {
+    const parsed = JSON.parse(normalized) as unknown;
+    if (Array.isArray(parsed)) {
+      const lines = parsed
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') {
+            return '';
+          }
+
+          const record = entry as Record<string, unknown>;
+          const text = String(record.text ?? '').trim();
+          if (!text) {
+            return '';
+          }
+
+          const speakerValue = record.speaker ?? record.speaker_name ?? null;
+          const speaker = typeof speakerValue === 'string' ? speakerValue.trim() : '';
+          return speaker ? `${speaker}: ${text}` : text;
+        })
+        .filter(Boolean);
+
+      if (lines.length > 0) {
+        return lines.join('\n');
+      }
+    }
+  } catch {
+    // Fall through to the legacy blob parser.
+  }
+
   const lines = normalized.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (lines.length === 0) {
     return '';
