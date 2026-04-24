@@ -27,7 +27,9 @@ export const meetingsService = {
   },
 
   async generateAINotes(id: string): Promise<AIGeneratedNotes> {
-    const response = await api.post<AIGeneratedNotes>(`/meetings/${id}/generate-notes`);
+    const response = await api.post<AIGeneratedNotes>(`/meetings/${id}/generate-notes`, undefined, {
+      timeout: 120000,
+    });
     return response.data;
   },
 

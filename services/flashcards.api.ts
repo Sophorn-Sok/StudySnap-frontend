@@ -60,7 +60,9 @@ export const flashcardsService = {
     title?: string;
     maxCards?: number;
   }): Promise<AIGeneratedDeckResponse> {
-    const response = await api.post<AIGeneratedDeckResponse>('/flashcards/decks/from-meeting', payload);
+    const response = await api.post<AIGeneratedDeckResponse>('/flashcards/decks/from-meeting', payload, {
+      timeout: 120000,
+    });
     return response.data;
   },
 };
