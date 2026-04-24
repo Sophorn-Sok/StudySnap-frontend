@@ -126,6 +126,25 @@ type TranscriptLine = {
   timestamp: string;
 };
 
+type StudyServiceResponse = {
+  title: string;
+  summary: {
+    tldr: string[];
+    keyPoints: string[];
+    actionItems: string[];
+  };
+  notes: Array<{
+    heading: string;
+    bullets: string[];
+  }>;
+  flashcards: Array<{
+    question: string;
+    answer: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+    tags: string[];
+  }>;
+};
+
 async function findAuthUserByEmail(email: string) {
   const admin = createSupabaseAdminClient();
   let page = 1;
@@ -688,6 +707,65 @@ function decodeBlobField(value: string) {
   } catch {
     return trimmed;
   }
+}
+
+function getStudyServiceBaseUrl() {
+  const configured =
+    process.env.STUDY_BACKEND_URL?.trim() ||
+    process.env.BACKEND_API_URL?.trim() ||
+    process.env.NEXT_PUBLIC_STUDY_BACKEND_URL?.trim() ||
+    '';
+
+  if (!configured) {
+    return null;
+  }
+
+  return configured.replace(/\/+$/, '');
+}
+
+function extractBotIdFromRecordingUrl(recordingUrl: string | null | undefined) {
+  const marker = 'meetingbaas://bot/';
+  const value = String(recordingUrl ?? '').trim();
+  if (!value.startsWith(marker)) {
+    return null;
+  }
+
+  const botId = value.slice(marker.length).trim();
+  return botId || null;
+}
+
+async function generateStudyArtifactsViaBackend(input: {
+  transcriptText: string;
+  title: string;
+  flashcardCount: number;
+  botId?: string | null;
+  userId: string;
+}) {
+  const baseUrl = getStudyServiceBaseUrl();
+  if (!baseUrl) {
+    return null;
+  }
+
+  const response = await fetch(`${baseUrl}/api/study/generate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      transcriptText: input.transcriptText,
+      title: input.title,
+      flashcardCount: input.flashcardCount,
+      botId: input.botId ?? undefined,
+      userId: input.userId,
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Study generation failed (${response.status}).`);
+  }
+
+  return (await response.json()) as StudyServiceResponse;
 }
 
 async function createSession(db: DbClient, userId: string) {
@@ -1564,15 +1642,39 @@ async function handleFlashcards(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptSource = String(meeting.transcript ?? '').trim();
+    const transcriptSource = decodeTranscriptBlob(meeting.transcript);
     if (!transcriptSource) {
       return errorResponse('This meeting has no transcript to summarize.', 400);
     }
 
-    const summary = buildSummary(transcriptSource);
-    const keyPoints = extractKeywords(transcriptSource, 5);
     const maxCards = Math.min(30, Math.max(5, Number.isFinite(maxCardsRaw) ? maxCardsRaw : 12));
-    const generatedCards = buildFlashcardsFromText(transcriptSource, maxCards);
+    let summary = buildSummary(transcriptSource);
+    let keyPoints = extractKeywords(transcriptSource, 5);
+    let generatedCards = buildFlashcardsFromText(transcriptSource, maxCards);
+
+    try {
+      const study = await generateStudyArtifactsViaBackend({
+        transcriptText: transcriptSource,
+        title: requestedTitle || meeting.title,
+        flashcardCount: maxCards,
+        botId: extractBotIdFromRecordingUrl(meeting.recording_url),
+        userId: authContext.user.id,
+      });
+
+      if (study) {
+        summary = study.summary.tldr.join(' ').trim() || summary;
+        keyPoints = study.summary.keyPoints.length > 0 ? study.summary.keyPoints : keyPoints;
+        generatedCards = study.flashcards
+          .filter((card) => card.question.trim() && card.answer.trim())
+          .map((card) => ({
+            front: card.question.trim(),
+            back: card.answer.trim(),
+            difficulty: card.difficulty,
+          }));
+      }
+    } catch {
+      // Keep local fallback generation if backend study service is unavailable.
+    }
 
     const baseTitle = requestedTitle || `AI Deck • ${meeting.title}`;
     const title = baseTitle.trim() || 'AI Deck';
@@ -1965,10 +2067,38 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const summary = buildSummary(meeting.transcript || meeting.title);
-    const keyPoints = extractKeywords(meeting.transcript || meeting.title, 5);
-    const actionItems = keyPoints.map((point) => `Review ${point}`);
-    const tags = keyPoints.slice(0, 4);
+    const transcriptSource = String(meeting.transcript || '').trim();
+    let summary = buildSummary(transcriptSource || meeting.title);
+    let keyPoints = extractKeywords(transcriptSource || meeting.title, 5);
+    let actionItems = keyPoints.map((point) => `Review ${point}`);
+    let tags = keyPoints.slice(0, 4);
+
+    try {
+      const meetingRow = await db
+        .from('meetings')
+        .select('recording_url')
+        .eq('id', meetingId)
+        .eq('user_id', authContext.user.id)
+        .maybeSingle<{ recording_url: string | null }>();
+
+      const study = await generateStudyArtifactsViaBackend({
+        transcriptText: transcriptSource,
+        title: meeting.title,
+        flashcardCount: 12,
+        botId: extractBotIdFromRecordingUrl(meetingRow.data?.recording_url),
+        userId: authContext.user.id,
+      });
+
+      if (study) {
+        summary = study.summary.tldr.join(' ').trim() || summary;
+        keyPoints = study.summary.keyPoints.length > 0 ? study.summary.keyPoints : keyPoints;
+        actionItems = study.summary.actionItems.length > 0 ? study.summary.actionItems : actionItems;
+        tags = [...new Set(study.flashcards.flatMap((card) => card.tags).map((tag) => String(tag).trim()).filter(Boolean))].slice(0, 8);
+      }
+    } catch {
+      // Keep local fallback generation if backend study service is unavailable.
+    }
+
     const notes = `${summary}\n\nKey points:\n- ${keyPoints.join('\n- ')}\n\nAction items:\n- ${actionItems.join('\n- ')}`;
 
     const { data: updatedMeeting, error } = await db
