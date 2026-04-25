@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { BookOpen, CheckCircle2, Clock3, Play, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useFlashcardStore } from '@/store';
@@ -9,6 +10,7 @@ import { getRelativeTime } from '@/utils/helpers';
 import { meetingsService } from '@/services/meetings.api';
 
 export default function FlashcardsPageContent() {
+  const router = useRouter();
   const {
     decks,
     selectedDeck,
@@ -199,6 +201,32 @@ export default function FlashcardsPageContent() {
     }
   };
 
+  const handleStudyNow = async () => {
+    if (!activeDeck) return;
+
+    const front = newCardFront.trim();
+    const back = newCardBack.trim();
+
+    // If user has filled in card fields, add the card first
+    if (front && back) {
+      setIsSubmitting(true);
+      setLocalError(null);
+      try {
+        await addCard(activeDeck.id, front, back, newCardDifficulty);
+        setNewCardFront('');
+        setNewCardBack('');
+        setNewCardDifficulty('easy');
+      } catch (addError) {
+        setLocalError((addError as Error).message);
+        setIsSubmitting(false);
+        return;
+      }
+      setIsSubmitting(false);
+    }
+
+    router.push(`/flashcards/study?deckId=${activeDeck.id}`);
+  };
+
   const handleGenerateDeckFromTranscript = async () => {
     if (!selectedMeetingId) {
       setLocalError('Select a meeting transcript first.');
@@ -385,28 +413,41 @@ export default function FlashcardsPageContent() {
           {filteredDecks.map((deck) => {
             const active = activeDeck?.id === deck.id;
             return (
-              <button
+              <div
                 key={deck.id}
-                type="button"
-                onClick={() => {
-                  setSelectedDeck(deck);
-                  setActiveSession(null);
-                }}
-                className={`w-full rounded-xl border px-3 py-3 text-left transition ${
+                className={`w-full rounded-xl border px-3 py-3 text-left transition cursor-pointer ${
                   active
                     ? 'border-blue-200 bg-blue-50/60'
                     : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                 }`}
+                onClick={() => {
+                  setSelectedDeck(deck);
+                  setActiveSession(null);
+                }}
               >
                 <p className="truncate text-sm font-semibold text-slate-900">{deck.title}</p>
                 <p className="mt-1 text-xs text-slate-500">
                   {deck.cardCount} cards · {deckMastery(deck.cards)}% mastery
                 </p>
-                <div className="mt-2 flex items-center gap-1 text-[11px] text-slate-400">
-                  <Clock3 size={12} />
-                  {getRelativeTime(deck.updatedAt)}
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1 text-[11px] text-slate-400">
+                    <Clock3 size={12} />
+                    {getRelativeTime(deck.updatedAt)}
+                  </div>
+                  {deck.cardCount > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/flashcards/study?deckId=${deck.id}`);
+                      }}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition"
+                    >
+                      <Play size={10} fill="currentColor" /> Study
+                    </button>
+                  )}
                 </div>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -428,9 +469,6 @@ export default function FlashcardsPageContent() {
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={handleDeleteDeck} isLoading={isSubmitting}>
                   <Trash2 size={14} /> Delete Deck
-                </Button>
-                <Button size="sm" onClick={handleStartStudy} isLoading={isSubmitting}>
-                  <Play size={14} /> Study Now
                 </Button>
               </div>
             </div>
@@ -484,8 +522,8 @@ export default function FlashcardsPageContent() {
                   <option value="hard">Hard</option>
                 </select>
 
-                <Button size="sm" onClick={handleAddCard} isLoading={isSubmitting}>
-                  <Plus size={14} /> Add Card
+                <Button size="sm" onClick={handleStudyNow} isLoading={isSubmitting}>
+                  <Play size={14} /> Study Now
                 </Button>
               </div>
             </div>
@@ -543,6 +581,15 @@ export default function FlashcardsPageContent() {
                     </div>
                     <p className="text-sm font-semibold text-slate-900">Q: {card.front}</p>
                     <p className="mt-1 text-sm text-slate-600">A: {card.back}</p>
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => router.push(`/flashcards/study?deckId=${activeDeck.id}`)}
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-blue-700 transition-colors"
+                      >
+                        <Play size={10} fill="currentColor" /> Study
+                      </button>
+                    </div>
                   </article>
                 ))}
               </div>
