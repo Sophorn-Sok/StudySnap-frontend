@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Logo } from '../ui/Logo';
+import { Search, Bell, Menu, X, Plus, Calendar, Clock, ChevronRight } from 'lucide-react';
 import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
 import {
   Menubar,
@@ -41,7 +42,7 @@ export const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-70 p-0">
               <div className="p-5 border-b border-gray-100">
-                <span className="font-bold text-lg text-gray-900">StudySnap</span>
+                <Logo size="md" />
               </div>
               <div className="p-3 space-y-1">
                 {mobileNavItems.map((item) => (
@@ -56,7 +57,7 @@ export const Navbar = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <span className="lg:hidden text-sm font-semibold text-gray-900">StudySnap</span>
+          <Logo size="sm" className="lg:hidden" />
         </div>
 
         {/* Left: Search */}
