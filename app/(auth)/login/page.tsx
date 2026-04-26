@@ -94,10 +94,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 p-12 text-white">
         <div>
           <Link href="/" className="flex items-center gap-2 mb-16 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
-              <Sparkles size={24} />
-            </div>
-            <span className="text-2xl font-bold">StudySnap</span>
+            <span className="text-2xl font-bold">VICHEA</span>
           </Link>
 
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">AI-Powered Learning Workspace</h2>
@@ -191,7 +188,7 @@ export default function LoginPage() {
       <div className="flex flex-col items-center justify-center p-6 lg:p-12 bg-gray-50 lg:bg-white">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Sign in to StudySnap</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Sign in to VICHEA</h1>
             <p className="text-gray-600">Access your notes, meetings, and flashcards.</p>
           </div>
 

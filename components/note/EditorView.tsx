@@ -172,13 +172,8 @@ def sigmoid(x):
       {/* Left Sidebar - Detailed Version */}
       <aside className="w-64 bg-white border-r border-[#E2E8F0] flex flex-col shrink-0">
         <div className="p-6 pb-2">
-          <Link href={ROUTES.DASHBOARD}>
-            <div className="flex items-center gap-2 mb-8 cursor-pointer">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                <Plus size={18} />
-              </div>
-              <span className="font-bold text-xl tracking-tight text-blue-600">StudySnap</span>
-            </div>
+          <Link href="/" className="flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity">
+            <span className="font-bold text-xl tracking-tight text-blue-600">VICHEA</span>
           </Link>
 
           <div className="relative mb-6">

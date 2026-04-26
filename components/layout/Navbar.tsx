@@ -41,7 +41,9 @@ export const Navbar = () => {
             </SheetTrigger>
             <SheetContent side="left" className="w-70 p-0">
               <div className="p-5 border-b border-gray-100">
-                <span className="font-bold text-lg text-gray-900">StudySnap</span>
+                <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <span className="font-bold text-lg text-gray-900">VICHEA</span>
+                </Link>
               </div>
               <div className="p-3 space-y-1">
                 {mobileNavItems.map((item) => (
@@ -56,7 +58,9 @@ export const Navbar = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <span className="lg:hidden text-sm font-semibold text-gray-900">StudySnap</span>
+          <Link href="/" className="lg:hidden flex items-center gap-1.5 hover:opacity-80 transition-opacity">
+            <span className="text-sm font-semibold text-gray-900">VICHEA</span>
+          </Link>
         </div>
 
         {/* Left: Search */}

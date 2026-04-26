@@ -381,7 +381,7 @@ async function sendOtpEmail(email: string, purpose: OtpPurpose, otp: string) {
     throw new Error('Missing RESEND_API_KEY or OTP_FROM_EMAIL environment variables.');
   }
 
-  const actionText = purpose === 'register' ? 'finish your StudySnap sign up' : 'sign in to StudySnap';
+  const actionText = purpose === 'register' ? 'finish your VICHEA sign up' : 'sign in to VICHEA';
   const send = async (from: string) =>
     fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -392,7 +392,7 @@ async function sendOtpEmail(email: string, purpose: OtpPurpose, otp: string) {
       body: JSON.stringify({
         from,
         to: [email],
-        subject: 'Your StudySnap OTP Code',
+        subject: 'Your VICHEA OTP Code',
         html: `<p>Use this code to ${actionText}:</p><p style=\"font-size: 24px; font-weight: 700; letter-spacing: 2px;\">${otp}</p><p>This code expires in 10 minutes.</p>`,
       }),
     });

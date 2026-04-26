@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/utils/constants';
 import {
-  Sparkles,
   LayoutDashboard,
   FileText,
   BrainCircuit,
@@ -70,12 +69,9 @@ export const Sidebar = () => {
 
   return (
     <div className="w-full flex flex-col p-6 h-full font-sans bg-white">
-      <div className="flex items-center gap-2 mb-10">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
-          <Sparkles size={18} />
-        </div>
-        <span className="font-bold text-xl tracking-tight text-gray-900">StudySnap</span>
-      </div>
+      <Link href="/" className="flex items-center gap-2 mb-10 hover:opacity-80 transition-opacity">
+        <span className="font-bold text-xl tracking-tight text-gray-900">VICHEA</span>
+      </Link>
 
       <nav className="flex-1">
         <ul className="space-y-1">{navItems.map(renderItem)}</ul>

@@ -251,7 +251,7 @@ export default function HowItWorksSection() {
           showConnector
           number={2}
           title="AI Organizes and Summarizes"
-          description="StudySnap AI analyzes your notes and meetings to generate structured summaries and key insights."
+          description="VICHEA AI analyzes your notes and meetings to generate structured summaries and key insights."
         >
           <ProcessingPreview />
         </StepCard>

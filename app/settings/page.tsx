@@ -28,7 +28,7 @@ export default function SettingsPage() {
     }
 
     const resolvedName =
-      `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username || 'StudySnap User';
+      `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim() || user.username || 'VICHEA User';
 
     setFullName(resolvedName);
     setEmailAddress(user.email ?? '');
@@ -49,7 +49,7 @@ export default function SettingsPage() {
   // Reusable custom soft shadow classes to match the design
   const cardShadow = "shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] dark:shadow-none";
   const inputShadow = "shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)] border border-slate-100 dark:border-slate-700 dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]";
-  const avatarSeed = (user?.username || fullName || 'StudySnap User').replace(/\s+/g, '-');
+  const avatarSeed = (user?.username || fullName || 'VICHEA User').replace(/\s+/g, '-');
 
   return (
     <>
@@ -87,7 +87,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-400 border-4 border-white dark:border-slate-800 rounded-full transition-colors"></div>
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{fullName || 'StudySnap User'}</h3>
+                <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{fullName || 'VICHEA User'}</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 mt-1">{emailAddress || 'Account not loaded yet'}</p>
                 
                 <div className="flex gap-3 w-full">
