@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/utils/constants';
 import { Logo } from '../ui/Logo';
 import {
-  Sparkles,
   LayoutDashboard,
   FileText,
   BrainCircuit,
