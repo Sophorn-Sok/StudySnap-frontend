@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BookOpen, CheckCircle2, Clock3, Play, Plus, Search, Sparkles, Trash2, MoreHorizontal, Pencil } from 'lucide-react';
@@ -9,6 +10,7 @@ import { useFlashcardStore } from '@/store';
 import { Flashcard, StudySession, Meeting, FlashcardDeck } from '@/types';
 import { getRelativeTime } from '@/utils/helpers';
 import { meetingsService } from '@/services/meetings.api';
+import { ROUTES } from '@/utils/constants';
 
 export default function FlashcardsPageContent() {
   const router = useRouter();
@@ -534,6 +536,23 @@ export default function FlashcardsPageContent() {
               </div>
             );
           })}
+        </div>
+
+        <div className="mt-4 border-t border-slate-200 pt-4">
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href={ROUTES.PRICING}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Pricing
+            </Link>
+            <Link
+              href={ROUTES.SETTINGS}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Settings
+            </Link>
+          </div>
         </div>
       </aside>
 

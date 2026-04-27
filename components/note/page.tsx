@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Clock, Plus, Save, Search, Trash2, BookOpen } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { useNotesStore } from '@/store';
 import { useMeetingsStore } from '@/store';
 import { getRelativeTime } from '@/utils/helpers';
+import { ROUTES } from '@/utils/constants';
 import type { Note } from '@/types';
 import type { Meeting } from '@/types';
 
@@ -219,6 +221,23 @@ export default function NotesPageContent() {
               </button>
             );
           })}
+        </div>
+
+        <div className="mt-4 border-t border-slate-200 pt-4">
+          <div className="grid grid-cols-2 gap-2">
+            <Link
+              href={ROUTES.PRICING}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Pricing
+            </Link>
+            <Link
+              href={ROUTES.SETTINGS}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-center text-xs font-semibold text-slate-600 hover:bg-slate-50"
+            >
+              Settings
+            </Link>
+          </div>
         </div>
       </aside>
 
