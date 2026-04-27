@@ -145,6 +145,17 @@ type StudyServiceResponse = {
   }>;
 };
 
+type BotTranscriptLine = {
+  seq: number;
+  text: string;
+  speaker: string | null;
+  timestamp: string;
+};
+
+type BotTranscriptResponse = {
+  lines?: BotTranscriptLine[];
+};
+
 async function findAuthUserByEmail(email: string) {
   const admin = createSupabaseAdminClient();
   let page = 1;
@@ -795,6 +806,46 @@ async function generateStudyArtifactsViaBackend(input: {
   }
 
   return (await response.json()) as StudyServiceResponse;
+}
+
+async function fetchTranscriptViaBackend(botId: string): Promise<string> {
+  const baseUrl = getStudyServiceBaseUrl();
+  if (!baseUrl || !botId.trim()) {
+    return '';
+  }
+
+  const response = await fetch(
+    `${baseUrl}/api/bot/transcript?botId=${encodeURIComponent(botId)}&sinceSeq=0`,
+    {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return '';
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as BotTranscriptResponse;
+  const lines = Array.isArray(payload.lines) ? payload.lines : [];
+  if (lines.length === 0) {
+    return '';
+  }
+
+  return lines
+    .map((line) => {
+      const text = String(line.text ?? '').trim();
+      if (!text) {
+        return '';
+      }
+
+      const speaker = String(line.speaker ?? '').trim();
+      return speaker ? `${speaker}: ${text}` : text;
+    })
+    .filter(Boolean)
+    .join('\n');
 }
 
 async function createSession(db: DbClient, userId: string) {
@@ -2096,25 +2147,47 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptSource = String(meeting.transcript || '').trim();
+    const meetingRow = await db
+      .from('meetings')
+      .select('recording_url')
+      .eq('id', meetingId)
+      .eq('user_id', authContext.user.id)
+      .maybeSingle<{ recording_url: string | null }>();
+
+    const botId = extractBotIdFromRecordingUrl(meetingRow.data?.recording_url);
+    let transcriptSource = String(meeting.transcript || '').trim();
+
+    if (!transcriptSource && botId) {
+      const hydratedTranscript = await fetchTranscriptViaBackend(botId);
+      if (hydratedTranscript) {
+        transcriptSource = hydratedTranscript;
+
+        await db
+          .from('meetings')
+          .update({
+            transcript: hydratedTranscript,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', meetingId)
+          .eq('user_id', authContext.user.id);
+      }
+    }
+
+    if (!transcriptSource) {
+      return errorResponse('Transcript is not available yet. Please wait a moment and try again.', 409);
+    }
+
     let summary = buildSummary(transcriptSource || meeting.title);
     let keyPoints = extractKeywords(transcriptSource || meeting.title, 5);
     let actionItems = keyPoints.map((point) => `Review ${point}`);
     let tags = keyPoints.slice(0, 4);
 
     try {
-      const meetingRow = await db
-        .from('meetings')
-        .select('recording_url')
-        .eq('id', meetingId)
-        .eq('user_id', authContext.user.id)
-        .maybeSingle<{ recording_url: string | null }>();
-
       const study = await generateStudyArtifactsViaBackend({
         transcriptText: transcriptSource,
         title: meeting.title,
         flashcardCount: 12,
-        botId: extractBotIdFromRecordingUrl(meetingRow.data?.recording_url),
+        botId,
         userId: authContext.user.id,
       });
 
