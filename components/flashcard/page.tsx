@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { BookOpen, CheckCircle2, Clock3, Play, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { BookOpen, CheckCircle2, Clock3, Play, Plus, Search, Sparkles, Trash2, MoreHorizontal, Pencil } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '../ui/dropdown-menu';
 import { useFlashcardStore } from '@/store';
-import { Flashcard, StudySession, Meeting } from '@/types';
+import { Flashcard, StudySession, Meeting, FlashcardDeck } from '@/types';
 import { getRelativeTime } from '@/utils/helpers';
 import { meetingsService } from '@/services/meetings.api';
 
@@ -25,6 +26,8 @@ export default function FlashcardsPageContent() {
     startStudySession,
     completeStudySession,
     setSelectedDeck,
+    updateDeck,
+    updateCard,
   } = useFlashcardStore();
 
   const [query, setQuery] = useState('');
@@ -43,6 +46,17 @@ export default function FlashcardsPageContent() {
   const [selectedMeetingId, setSelectedMeetingId] = useState('');
   const [aiSummary, setAiSummary] = useState('');
   const [aiKeyPoints, setAiKeyPoints] = useState<string[]>([]);
+
+  const [deckToDelete, setDeckToDelete] = useState<FlashcardDeck | null>(null);
+  const [deckToEdit, setDeckToEdit] = useState<FlashcardDeck | null>(null);
+  const [editDeckTitle, setEditDeckTitle] = useState('');
+  const [editDeckDescription, setEditDeckDescription] = useState('');
+
+  const [cardToDelete, setCardToDelete] = useState<Flashcard | null>(null);
+  const [cardToEdit, setCardToEdit] = useState<Flashcard | null>(null);
+  const [editCardFront, setEditCardFront] = useState('');
+  const [editCardBack, setEditCardBack] = useState('');
+  const [editCardDifficulty, setEditCardDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
 
   useEffect(() => {
     void fetchDecks();
@@ -144,31 +158,89 @@ export default function FlashcardsPageContent() {
     }
   };
 
+  const confirmDeleteDeck = async () => {
+    if (!deckToDelete) return;
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+    try {
+      const nextDeck = decks.find((deck) => deck.id !== deckToDelete.id) ?? null;
+      await deleteDeck(deckToDelete.id);
+      if (selectedDeck?.id === deckToDelete.id) {
+        setSelectedDeck(nextDeck);
+        setActiveSession(null);
+      }
+      setFeedback('Deck deleted.');
+      setDeckToDelete(null);
+    } catch (error) {
+      setLocalError((error as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmEditDeck = async () => {
+    if (!deckToEdit) return;
+    if (!editDeckTitle.trim()) {
+      setLocalError('Deck title is required.');
+      return;
+    }
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+    try {
+      await updateDeck(deckToEdit.id, { title: editDeckTitle.trim(), description: editDeckDescription.trim() });
+      setFeedback('Deck updated.');
+      setDeckToEdit(null);
+    } catch (error) {
+      setLocalError((error as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmDeleteCard = async () => {
+    if (!cardToDelete || !activeDeck) return;
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+    try {
+      await deleteCard(activeDeck.id, cardToDelete.id);
+      setFeedback('Card deleted.');
+      setCardToDelete(null);
+    } catch (error) {
+      setLocalError((error as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const confirmEditCard = async () => {
+    if (!cardToEdit || !activeDeck) return;
+    if (!editCardFront.trim() || !editCardBack.trim()) {
+      setLocalError('Both front and back content are required.');
+      return;
+    }
+    setIsSubmitting(true);
+    setLocalError(null);
+    setFeedback(null);
+    try {
+      await updateCard(activeDeck.id, cardToEdit.id, { front: editCardFront.trim(), back: editCardBack.trim(), difficulty: editCardDifficulty });
+      setFeedback('Card updated.');
+      setCardToEdit(null);
+    } catch (error) {
+      setLocalError((error as Error).message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDeleteDeck = async () => {
     if (!activeDeck) {
       return;
     }
 
-    const shouldDelete = window.confirm(`Delete deck "${activeDeck.title}"? This also removes all cards in the deck.`);
-    if (!shouldDelete) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setLocalError(null);
-    setFeedback(null);
-
-    try {
-      const nextDeck = decks.find((deck) => deck.id !== activeDeck.id) ?? null;
-      await deleteDeck(activeDeck.id);
-      setSelectedDeck(nextDeck);
-      setActiveSession(null);
-      setFeedback('Deck deleted.');
-    } catch (deleteError) {
-      setLocalError((deleteError as Error).message);
-    } finally {
-      setIsSubmitting(false);
-    }
+    setDeckToDelete(activeDeck);
   };
 
   const handleAddCard = async () => {
@@ -254,15 +326,7 @@ export default function FlashcardsPageContent() {
     if (!activeDeck) {
       return;
     }
-
-    setLocalError(null);
-    setFeedback(null);
-    try {
-      await deleteCard(activeDeck.id, card.id);
-      setFeedback('Card deleted.');
-    } catch (deleteError) {
-      setLocalError((deleteError as Error).message);
-    }
+    setCardToDelete(card);
   };
 
   const handleStartStudy = async () => {
@@ -425,10 +489,29 @@ export default function FlashcardsPageContent() {
                   setActiveSession(null);
                 }}
               >
-                <p className="truncate text-sm font-semibold text-slate-900">{deck.title}</p>
-                <p className="mt-1 text-xs text-slate-500">
-                  {deck.cardCount} cards · {deckMastery(deck.cards)}% mastery
-                </p>
+                <div className="flex items-start justify-between">
+                  <div className="min-w-0 pr-2">
+                    <p className="truncate text-sm font-semibold text-slate-900">{deck.title}</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {deck.cardCount} cards · {deckMastery(deck.cards)}% mastery
+                    </p>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button onClick={(e) => e.stopPropagation()} className="p-1 hover:bg-slate-200 rounded-md transition-colors">
+                        <MoreHorizontal size={16} className="text-slate-500" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setEditDeckTitle(deck.title); setEditDeckDescription(deck.description || ''); setDeckToEdit(deck); }}>
+                        <Pencil className="mr-2" size={14} /> Edit Deck
+                      </DropdownMenuItem>
+                      <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onClick={(e) => { e.stopPropagation(); setDeckToDelete(deck); }}>
+                        <Trash2 className="mr-2" size={14} /> Delete Deck
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
                 <div className="mt-2 flex items-center justify-between">
                   <div className="flex items-center gap-1 text-[11px] text-slate-400">
                     <Clock3 size={12} />
@@ -570,13 +653,21 @@ export default function FlashcardsPageContent() {
                       </span>
                       <div className="flex items-center gap-2 text-xs text-slate-500">
                         <span>Reviews: {card.reviewCount}</span>
-                        <button
-                          type="button"
-                          onClick={() => void handleDeleteCard(card)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Delete
-                        </button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 hover:bg-slate-100 rounded-md transition-colors text-slate-400 hover:text-slate-600">
+                              <MoreHorizontal size={16} />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditCardFront(card.front); setEditCardBack(card.back); setEditCardDifficulty(card.difficulty as any); setCardToEdit(card); }}>
+                              <Pencil className="mr-2" size={14} /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600 focus:text-red-600 focus:bg-red-50" onClick={() => setCardToDelete(card)}>
+                              <Trash2 className="mr-2" size={14} /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                     <p className="text-sm font-semibold text-slate-900">Q: {card.front}</p>
@@ -629,6 +720,109 @@ export default function FlashcardsPageContent() {
           </div>
         </div>
       </aside>
+
+      {/* Modals */}
+      {deckToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-slate-900">Delete Deck</h3>
+            <p className="mb-6 text-sm text-slate-500">Are you sure you want to delete this deck? This action can't be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setDeckToDelete(null)} disabled={isSubmitting}>Cancel</Button>
+              <Button onClick={confirmDeleteDeck} isLoading={isSubmitting} className="bg-red-600 hover:bg-red-700 text-white border-transparent">Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deckToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-bold text-slate-900">Edit Deck</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+                <input
+                  type="text"
+                  value={editDeckTitle}
+                  onChange={(e) => setEditDeckTitle(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <textarea
+                  value={editDeckDescription}
+                  onChange={(e) => setEditDeckDescription(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setDeckToEdit(null)} disabled={isSubmitting}>Cancel</Button>
+              <Button onClick={confirmEditDeck} isLoading={isSubmitting}>Save Changes</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cardToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-2 text-lg font-bold text-slate-900">Delete Card</h3>
+            <p className="mb-6 text-sm text-slate-500">Are you sure you want to delete this card? This action can't be undone.</p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setCardToDelete(null)} disabled={isSubmitting}>Cancel</Button>
+              <Button onClick={confirmDeleteCard} isLoading={isSubmitting} className="bg-red-600 hover:bg-red-700 text-white border-transparent">Delete</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cardToEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="mb-4 text-lg font-bold text-slate-900">Edit Card</h3>
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Front (question)</label>
+                <textarea
+                  value={editCardFront}
+                  onChange={(e) => setEditCardFront(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Back (answer)</label>
+                <textarea
+                  value={editCardBack}
+                  onChange={(e) => setEditCardBack(e.target.value)}
+                  rows={3}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Difficulty</label>
+                <select
+                  value={editCardDifficulty}
+                  onChange={(e) => setEditCardDifficulty(e.target.value as any)}
+                  className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100 bg-white"
+                >
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setCardToEdit(null)} disabled={isSubmitting}>Cancel</Button>
+              <Button onClick={confirmEditCard} isLoading={isSubmitting}>Save Changes</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
