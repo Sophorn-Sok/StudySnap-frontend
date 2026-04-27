@@ -156,6 +156,8 @@ type BotTranscriptResponse = {
   lines?: BotTranscriptLine[];
 };
 
+const DEFAULT_STUDY_BACKEND_URL = 'https://studysnapaddonbackend-production-45ff.up.railway.app';
+
 async function findAuthUserByEmail(email: string) {
   const admin = createSupabaseAdminClient();
   let page = 1;
@@ -754,13 +756,19 @@ function getStudyServiceBaseUrl() {
     process.env.STUDY_BACKEND_URL?.trim() ||
     process.env.BACKEND_API_URL?.trim() ||
     process.env.NEXT_PUBLIC_STUDY_BACKEND_URL?.trim() ||
-    '';
+    DEFAULT_STUDY_BACKEND_URL;
 
   if (!configured) {
     return null;
   }
 
   return configured.replace(/\/+$/, '');
+}
+
+function allowLocalMeetingSummaryFallback() {
+  return String(process.env.MEETING_NOTES_ALLOW_LOCAL_FALLBACK ?? '')
+    .trim()
+    .toLowerCase() === 'true';
 }
 
 function extractBotIdFromRecordingUrl(recordingUrl: string | null | undefined) {
@@ -2181,6 +2189,7 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
     let keyPoints = extractKeywords(transcriptSource || meeting.title, 5);
     let actionItems = keyPoints.map((point) => `Review ${point}`);
     let tags = keyPoints.slice(0, 4);
+    let provider: 'vertex' | 'fallback' = 'fallback';
 
     try {
       const study = await generateStudyArtifactsViaBackend({
@@ -2191,14 +2200,24 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
         userId: authContext.user.id,
       });
 
-      if (study) {
-        summary = study.summary.tldr.join(' ').trim() || summary;
-        keyPoints = study.summary.keyPoints.length > 0 ? study.summary.keyPoints : keyPoints;
-        actionItems = study.summary.actionItems.length > 0 ? study.summary.actionItems : actionItems;
-        tags = [...new Set(study.flashcards.flatMap((card) => card.tags).map((tag) => String(tag).trim()).filter(Boolean))].slice(0, 8);
+      if (!study) {
+        throw new Error('Study backend URL is not configured. Set STUDY_BACKEND_URL or BACKEND_API_URL.');
       }
-    } catch {
-      // Keep local fallback generation if backend study service is unavailable.
+
+      provider = 'vertex';
+      summary = study.summary.tldr.join(' ').trim() || summary;
+      keyPoints = study.summary.keyPoints.length > 0 ? study.summary.keyPoints : keyPoints;
+      actionItems = study.summary.actionItems.length > 0 ? study.summary.actionItems : actionItems;
+      tags = [...new Set(study.flashcards.flatMap((card) => card.tags).map((tag) => String(tag).trim()).filter(Boolean))].slice(0, 8);
+    } catch (error) {
+      if (!allowLocalMeetingSummaryFallback()) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorResponse(
+          `Vertex summary generation failed. ${message}. Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
+          502
+        );
+      }
+      // Optional local fallback can be enabled with MEETING_NOTES_ALLOW_LOCAL_FALLBACK=true.
     }
 
     const notes = `${summary}\n\nKey points:\n- ${keyPoints.join('\n- ')}\n\nAction items:\n- ${actionItems.join('\n- ')}`;
@@ -2217,7 +2236,7 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse(error?.message ?? 'Failed to generate meeting notes.', 500);
     }
 
-    return json({ summary, keyPoints, actionItems, tags });
+    return json({ summary, keyPoints, actionItems, tags, provider });
   }
 
   if (meetingId && segments[2] === 'upload' && request.method === 'POST') {
@@ -2364,9 +2383,38 @@ async function handleAi(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptText = decodeTranscriptBlob(meeting.transcript);
-    const notes = buildSummary(transcriptText || meeting.title);
-    return json({ notes });
+    const transcriptText = decodeTranscriptBlob(meeting.transcript).trim();
+    if (!transcriptText) {
+      return errorResponse('Transcript is not available yet. Please wait a moment and try again.', 409);
+    }
+
+    try {
+      const study = await generateStudyArtifactsViaBackend({
+        transcriptText,
+        title: meeting.title,
+        flashcardCount: 12,
+        botId: extractBotIdFromRecordingUrl(meeting.recording_url),
+        userId: authContext.user.id,
+      });
+
+      if (!study) {
+        throw new Error('Study backend URL is not configured. Set STUDY_BACKEND_URL or BACKEND_API_URL.');
+      }
+
+      const notes = `${study.summary.tldr.join(' ').trim()}\n\nKey points:\n- ${study.summary.keyPoints.join('\n- ')}\n\nAction items:\n- ${study.summary.actionItems.join('\n- ')}`;
+      return json({ notes, provider: 'vertex' });
+    } catch (error) {
+      if (!allowLocalMeetingSummaryFallback()) {
+        const message = error instanceof Error ? error.message : String(error);
+        return errorResponse(
+          `Vertex summary generation failed. ${message}. Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
+          502
+        );
+      }
+
+      const notes = buildSummary(transcriptText || meeting.title);
+      return json({ notes, provider: 'fallback' });
+    }
   }
 
   if (segments[1] === 'ask' && request.method === 'POST') {
