@@ -158,6 +158,28 @@ type BotTranscriptResponse = {
 
 const DEFAULT_STUDY_BACKEND_URL = 'https://studysnapaddonbackend-production-45ff.up.railway.app';
 
+function normalizeExternalBaseUrl(value?: string | null) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const withProtocol =
+    trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withProtocol);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '');
+    return `${parsed.origin}${normalizedPath === '/' ? '' : normalizedPath}`;
+  } catch {
+    return null;
+  }
+}
+
 async function findAuthUserByEmail(email: string) {
   const admin = createSupabaseAdminClient();
   let page = 1;
@@ -752,17 +774,21 @@ function decodeBlobField(value: string) {
 }
 
 function getStudyServiceBaseUrl() {
-  const configured =
-    process.env.STUDY_BACKEND_URL?.trim() ||
-    process.env.BACKEND_API_URL?.trim() ||
-    process.env.NEXT_PUBLIC_STUDY_BACKEND_URL?.trim() ||
-    DEFAULT_STUDY_BACKEND_URL;
+  const candidates = [
+    process.env.STUDY_BACKEND_URL,
+    process.env.BACKEND_API_URL,
+    process.env.NEXT_PUBLIC_STUDY_BACKEND_URL,
+    DEFAULT_STUDY_BACKEND_URL,
+  ];
 
-  if (!configured) {
-    return null;
+  for (const candidate of candidates) {
+    const normalized = normalizeExternalBaseUrl(candidate);
+    if (normalized) {
+      return normalized;
+    }
   }
 
-  return configured.replace(/\/+$/, '');
+  return null;
 }
 
 function allowLocalMeetingSummaryFallback() {
@@ -2212,8 +2238,12 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
     } catch (error) {
       if (!allowLocalMeetingSummaryFallback()) {
         const message = error instanceof Error ? error.message : String(error);
+        const urlHint =
+          /failed to parse url|invalid url/i.test(message)
+            ? ' STUDY_BACKEND_URL must include protocol, for example https://your-backend.up.railway.app.'
+            : '';
         return errorResponse(
-          `Vertex summary generation failed. ${message}. Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
+          `Vertex summary generation failed. ${message}.${urlHint} Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
           502
         );
       }
@@ -2406,8 +2436,12 @@ async function handleAi(request: NextRequest, segments: string[]) {
     } catch (error) {
       if (!allowLocalMeetingSummaryFallback()) {
         const message = error instanceof Error ? error.message : String(error);
+        const urlHint =
+          /failed to parse url|invalid url/i.test(message)
+            ? ' STUDY_BACKEND_URL must include protocol, for example https://your-backend.up.railway.app.'
+            : '';
         return errorResponse(
-          `Vertex summary generation failed. ${message}. Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
+          `Vertex summary generation failed. ${message}.${urlHint} Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
           502
         );
       }
