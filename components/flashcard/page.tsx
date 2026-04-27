@@ -42,7 +42,7 @@ export default function FlashcardsPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [meetingsWithSummary, setMeetingsWithSummary] = useState<Meeting[]>([]);
   const [selectedMeetingId, setSelectedMeetingId] = useState('');
   const [aiSummary, setAiSummary] = useState('');
   const [aiKeyPoints, setAiKeyPoints] = useState<string[]>([]);
@@ -66,9 +66,10 @@ export default function FlashcardsPageContent() {
     const loadMeetings = async () => {
       try {
         const items = await meetingsService.getMeetings();
-        setMeetings(items);
-        if (items.length > 0) {
-          setSelectedMeetingId((current) => current || items[0].id);
+        const withSummary = items.filter((meeting) => (meeting.aiNotes ?? '').trim().length > 0);
+        setMeetingsWithSummary(withSummary);
+        if (withSummary.length > 0) {
+          setSelectedMeetingId((current) => current || withSummary[0].id);
         }
       } catch {
         // Meeting fetch errors are surfaced when generating AI deck.
@@ -299,9 +300,9 @@ export default function FlashcardsPageContent() {
     router.push(`/flashcards/study?deckId=${activeDeck.id}`);
   };
 
-  const handleGenerateDeckFromTranscript = async () => {
+  const handleGenerateDeckFromSummary = async () => {
     if (!selectedMeetingId) {
-      setLocalError('Select a meeting transcript first.');
+      setLocalError('Select a meeting summary first.');
       return;
     }
 
@@ -388,7 +389,7 @@ export default function FlashcardsPageContent() {
 
         <div className="mb-4 rounded-xl border border-blue-100 bg-blue-50/50 p-3">
           <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-blue-700">
-            <Sparkles size={14} /> AI from transcript
+            <Sparkles size={14} /> AI from summary
           </div>
 
           <select
@@ -396,10 +397,10 @@ export default function FlashcardsPageContent() {
             onChange={(event) => setSelectedMeetingId(event.target.value)}
             className="mb-2 w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
           >
-            {meetings.length === 0 ? (
-              <option value="">No meetings found</option>
+            {meetingsWithSummary.length === 0 ? (
+              <option value="">No meeting summaries found</option>
             ) : (
-              meetings.map((meeting) => (
+              meetingsWithSummary.map((meeting) => (
                 <option key={meeting.id} value={meeting.id}>
                   {meeting.title}
                 </option>
@@ -410,9 +411,9 @@ export default function FlashcardsPageContent() {
           <Button
             size="sm"
             className="w-full"
-            onClick={handleGenerateDeckFromTranscript}
+            onClick={handleGenerateDeckFromSummary}
             isLoading={isSubmitting}
-            disabled={meetings.length === 0}
+            disabled={meetingsWithSummary.length === 0}
           >
             <Sparkles size={14} /> Generate AI Deck
           </Button>
@@ -706,9 +707,9 @@ export default function FlashcardsPageContent() {
           </div>
 
           <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
-            <p className="mb-1 text-indigo-700">AI Transcript Summary</p>
+            <p className="mb-1 text-indigo-700">AI Summary Source</p>
             <p className="text-xs text-indigo-900">
-              {aiSummary || 'Generate an AI deck from a meeting transcript to see the summary here.'}
+              {aiSummary || 'Generate an AI deck from a meeting summary to see the source summary here.'}
             </p>
             {aiKeyPoints.length > 0 && (
               <ul className="mt-2 space-y-1 text-xs text-indigo-900">

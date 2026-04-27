@@ -28,6 +28,7 @@ export default function NotesPageContent() {
     meetings,
     isLoading: meetingsLoading,
     fetchMeetings,
+    updateMeeting,
   } = useMeetingsStore();
 
   const [query, setQuery] = useState('');
@@ -130,12 +131,17 @@ export default function NotesPageContent() {
     }
   };
 
-  const handleDeleteNote = async () => {
-    if (!selectedItemId || selectedItemType !== 'note') return;
+  const handleDeleteSelected = async () => {
+    if (!selectedItemId || !selectedItemType) return;
 
     setLocalError(null);
     try {
-      await deleteNote(selectedItemId);
+      if (selectedItemType === 'note') {
+        await deleteNote(selectedItemId);
+      } else {
+        await updateMeeting(selectedItemId, { aiNotes: '' });
+      }
+
       const nextItem = displayItems.find((item) => item.id !== selectedItemId) ?? null;
       if (nextItem) {
         setSelectedItemId(nextItem.id);
@@ -230,11 +236,11 @@ export default function NotesPageContent() {
               </div>
 
               <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={handleDeleteSelected}>
+                  <Trash2 size={14} /> {isReadOnly ? 'Delete Summary' : 'Delete'}
+                </Button>
                 {!isReadOnly && (
                   <>
-                    <Button variant="outline" size="sm" onClick={handleDeleteNote}>
-                      <Trash2 size={14} /> Delete
-                    </Button>
                     <Button size="sm" onClick={handleSaveNote} isLoading={isSaving}>
                       <Save size={14} /> Save
                     </Button>

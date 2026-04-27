@@ -1756,19 +1756,19 @@ async function handleFlashcards(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptSource = decodeTranscriptBlob(meeting.transcript);
-    if (!transcriptSource) {
-      return errorResponse('This meeting has no transcript to summarize.', 400);
+    const summarySource = String(meeting.ai_notes ?? '').trim();
+    if (!summarySource) {
+      return errorResponse('This meeting has no AI note summary yet. Generate meeting notes first.', 400);
     }
 
     const maxCards = Math.min(30, Math.max(5, Number.isFinite(maxCardsRaw) ? maxCardsRaw : 12));
-    let summary = buildSummary(transcriptSource);
-    let keyPoints = extractKeywords(transcriptSource, 5);
-    let generatedCards = buildFlashcardsFromText(transcriptSource, maxCards);
+    let summary = buildSummary(summarySource);
+    let keyPoints = extractKeywords(summarySource, 5);
+    let generatedCards = buildFlashcardsFromText(summarySource, maxCards);
 
     try {
       const study = await generateStudyArtifactsViaBackend({
-        transcriptText: transcriptSource,
+        transcriptText: summarySource,
         title: requestedTitle || meeting.title,
         flashcardCount: maxCards,
         botId: extractBotIdFromRecordingUrl(meeting.recording_url),
