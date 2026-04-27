@@ -145,6 +145,15 @@ type StudyServiceResponse = {
   }>;
 };
 
+type StudyMediaServiceResponse = {
+  transcript: string;
+  summary: {
+    tldr: string[];
+    keyPoints: string[];
+    actionItems: string[];
+  };
+};
+
 type BotTranscriptLine = {
   seq: number;
   text: string;
@@ -840,6 +849,36 @@ async function generateStudyArtifactsViaBackend(input: {
   }
 
   return (await response.json()) as StudyServiceResponse;
+}
+
+async function transcribeMediaViaBackend(input: {
+  mediaBase64: string;
+  mimeType: string;
+  title: string;
+}) {
+  const baseUrl = getStudyServiceBaseUrl();
+  if (!baseUrl) {
+    return null;
+  }
+
+  const response = await fetch(`${baseUrl}/api/study/media`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      mediaBase64: input.mediaBase64,
+      mimeType: input.mimeType,
+      title: input.title,
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Media transcription failed (${response.status}).`);
+  }
+
+  return (await response.json()) as StudyMediaServiceResponse;
 }
 
 async function fetchTranscriptViaBackend(botId: string): Promise<string> {
@@ -2271,27 +2310,88 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
 
   if (meetingId && segments[2] === 'upload' && request.method === 'POST') {
     const formData = await request.formData();
-    const recording = formData.get('recording');
+    const media = formData.get('media') ?? formData.get('recording');
 
-    if (!(recording instanceof File)) {
-      return errorResponse('Recording file is required.', 400);
+    if (!(media instanceof File)) {
+      return errorResponse('Audio or video file is required.', 400);
     }
 
-    const recordingUrl = `/uploads/${meetingId}/${recording.name}`;
-    const { error } = await db
+    const mimeType = String(media.type ?? '').trim().toLowerCase();
+    if (!/^(audio|video)\//.test(mimeType)) {
+      return errorResponse('Only audio or video files are supported.', 400);
+    }
+
+    const meeting = await getMeetingById(db, authContext.user.id, meetingId);
+    if (!meeting) {
+      return errorResponse('Meeting not found.', 404);
+    }
+
+    const mediaBase64 = Buffer.from(await media.arrayBuffer()).toString('base64');
+    if (!mediaBase64) {
+      return errorResponse('Uploaded media file is empty.', 400);
+    }
+
+    const mediaStudy = await transcribeMediaViaBackend({
+      mediaBase64,
+      mimeType,
+      title: meeting.title,
+    });
+
+    if (!mediaStudy) {
+      return errorResponse('Study backend URL is not configured. Set STUDY_BACKEND_URL or BACKEND_API_URL.', 500);
+    }
+
+    const summaryText = mediaStudy.summary.tldr.join(' ').trim() || buildSummary(mediaStudy.transcript);
+    const keyPoints = mediaStudy.summary.keyPoints.length > 0
+      ? mediaStudy.summary.keyPoints
+      : extractKeywords(mediaStudy.transcript, 5);
+    const actionItems = mediaStudy.summary.actionItems.length > 0
+      ? mediaStudy.summary.actionItems
+      : keyPoints.map((point) => `Review ${point}`);
+    const notesText = `${summaryText}\n\nKey points:\n- ${keyPoints.join('\n- ')}\n\nAction items:\n- ${actionItems.join('\n- ')}`;
+
+    const recordingUrl = `/uploads/${meetingId}/${media.name}`;
+    const { error: meetingError } = await db
       .from('meetings')
       .update({
+        transcript: mediaStudy.transcript,
+        ai_notes: notesText,
         recording_url: recordingUrl,
         updated_at: new Date().toISOString(),
       })
       .eq('id', meetingId)
       .eq('user_id', authContext.user.id);
 
-    if (error) {
-      return errorResponse(error.message, 500);
+    if (meetingError) {
+      return errorResponse(meetingError.message, 500);
     }
 
-    return json({ recordingUrl });
+    const timestamp = new Date().toISOString();
+    const noteTitle = `${meeting.title} - AI Notes`;
+    const { data: insertedNote, error: noteError } = await db
+      .from('notes')
+      .insert({
+        user_id: authContext.user.id,
+        title: noteTitle,
+        content: notesText,
+        tags: ['meeting-summary', 'vertex-upload'],
+        is_shared: false,
+        shared_with: [],
+        created_at: timestamp,
+        updated_at: timestamp,
+      })
+      .select('*')
+      .single<NoteRow>();
+
+    if (noteError || !insertedNote) {
+      return errorResponse(humanizeDbError(noteError?.message), dbErrorStatus(noteError?.message));
+    }
+
+    return json({
+      recordingUrl,
+      note: toNote(insertedNote),
+      provider: 'vertex',
+    });
   }
 
   return errorResponse('Not found', 404);

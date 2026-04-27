@@ -92,7 +92,7 @@ export const Navbar = () => {
                   Start Meeting
                 </MenubarItem>
                 <MenubarItem className="cursor-pointer">
-                  Upload Recording
+                  Upload Audio
                 </MenubarItem>
               </MenubarContent>
             </MenubarMenu>

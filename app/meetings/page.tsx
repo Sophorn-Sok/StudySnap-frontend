@@ -171,8 +171,9 @@ export default function MeetingsPage() {
     setFeedback(null);
 
     try {
-      await uploadMeetingRecording(id, file);
-      setFeedback('Recording uploaded.');
+      const uploaded = await uploadMeetingRecording(id, file);
+      const noteMessage = uploaded.note?.title ? ` Note created: ${uploaded.note.title}.` : '';
+      setFeedback(`Audio uploaded and processed with Vertex.${noteMessage}`);
       await fetchMeetings();
     } catch (uploadError) {
       setLocalError((uploadError as Error).message);
