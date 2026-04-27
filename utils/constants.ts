@@ -27,6 +27,7 @@ export const ROUTES = {
   FLASHCARDS: '/flashcards',
   MEETINGS: '/meetings',
   ANALYTICS: '/analytics',
+  PRICING: '/pricing',
   SETTINGS: '/settings',
 };
 

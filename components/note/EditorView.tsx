@@ -199,8 +199,8 @@ def sigmoid(x):
             <SidebarLink icon={<Mic size={18} />} label="Meetings" href="#" />
             <SidebarLink icon={<BarChart3 size={18} />} label="Analytics" href="#" />
             <SidebarLink icon={<Users size={18} />} label="Shared" href="#" />
-            <SidebarLink icon={<CreditCard size={18} />} label="Pricing" href="#" />
-            <SidebarLink icon={<Settings size={18} />} label="Settings" href="#" />
+            <SidebarLink icon={<CreditCard size={18} />} label="Pricing" href={ROUTES.PRICING} />
+            <SidebarLink icon={<Settings size={18} />} label="Settings" href={ROUTES.SETTINGS} />
           </nav>
         </div>
 
