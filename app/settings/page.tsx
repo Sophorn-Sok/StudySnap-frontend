@@ -88,7 +88,8 @@ export default function SettingsPage() {
                   <div className="absolute bottom-0 right-0 w-6 h-6 bg-emerald-400 border-4 border-white dark:border-slate-800 rounded-full transition-colors"></div>
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100">{fullName || 'VICHEA User'}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 mt-1">{emailAddress || 'Account not loaded yet'}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-1 mt-1">{emailAddress || 'Account not loaded yet'}</p>
+                {user && <p className="text-xs text-slate-400 dark:text-slate-500 mb-6 font-mono">ID: {user.id}</p>}
                 
                 <div className="flex gap-3 w-full">
                   <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white rounded-full py-2.5 font-semibold text-sm shadow-lg shadow-blue-500/30 transition-all">
@@ -172,6 +173,23 @@ export default function SettingsPage() {
                       className={`w-full bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3.5 text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500/20 transition-all ${inputShadow}`}
                     />
                   </div>
+                  {user && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider ml-2">User ID</label>
+                      <div className={`w-full bg-slate-50 dark:bg-slate-900 rounded-2xl px-5 py-3.5 text-slate-700 dark:text-slate-200 font-mono text-sm flex items-center justify-between ${inputShadow}`}>
+                        <span>{user.id}</span>
+                        <button 
+                          onClick={() => {
+                            navigator.clipboard.writeText(user.id);
+                          }}
+                          className="text-xs text-slate-500 dark:text-slate-400 hover:text-blue-500 ml-2"
+                          title="Copy User ID"
+                        >
+                          Copy
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2 mb-10">

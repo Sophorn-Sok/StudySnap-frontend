@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useMeetingsStore } from '@/store';
+import { useAuth } from '@/hooks/useAuth';
 import type { Meeting } from '@/types';
 
 type MeetingStatus = 'completed' | 'processing' | 'live';
@@ -64,6 +65,7 @@ function StatusBadge({ status }: { status: MeetingStatus }) {
 }
 
 export default function MeetingsPage() {
+  const { user } = useAuth();
   const {
     meetings,
     isLoading,
@@ -182,7 +184,10 @@ export default function MeetingsPage() {
       <Navbar />
       <DashboardLayout sidebar={<Sidebar />}>
         <div className="space-y-6 p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-gray-900">Meetings</h1>
+          <div className="flex flex-col gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">Meetings</h1>
+            {user && <p className="text-sm text-gray-600">User ID: <span className="font-mono font-semibold text-gray-800">{user.id}</span></p>}
+          </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Your Meetings</h2>
