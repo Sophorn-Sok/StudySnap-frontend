@@ -159,7 +159,7 @@ export default function NotesPageContent() {
 
   return (
     <div className="flex h-full w-full overflow-hidden font-sans text-slate-800">
-      <aside className="w-full max-w-sm shrink-0 border-r border-slate-200 bg-white p-5">
+      <aside className="flex h-full w-full max-w-sm shrink-0 flex-col border-r border-slate-200 bg-white p-5">
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold">Notes & Summaries</h2>
           <Button variant="outline" size="sm" onClick={handleCreateNote}>
@@ -181,7 +181,7 @@ export default function NotesPageContent() {
         {(isLoading || meetingsLoading) && <p className="text-sm text-slate-500">Loading...</p>}
         {(error || localError) && <p className="mb-3 text-sm text-red-600">{localError ?? error}</p>}
 
-        <div className="space-y-2 overflow-y-auto pr-1">
+        <div className="min-h-0 flex-1 overflow-y-auto pr-1">
           {!isLoading && !meetingsLoading && filteredItems.length === 0 && (
             <p className="text-sm text-slate-500">No notes found.</p>
           )}
