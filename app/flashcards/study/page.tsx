@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import FlashcardStudyMode from '@/components/flashcard/StudyMode';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Sidebar } from '@/components/layout/Sidebar';
@@ -10,7 +11,9 @@ export default function FlashcardStudyPage() {
     <>
       <Navbar />
       <DashboardLayout sidebar={<Sidebar />}>
-        <FlashcardStudyMode />
+        <Suspense fallback={<div className="p-8 text-center">Loading study mode...</div>}>
+          <FlashcardStudyMode />
+        </Suspense>
       </DashboardLayout>
     </>
   );

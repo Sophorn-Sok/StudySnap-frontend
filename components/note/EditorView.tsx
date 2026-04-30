@@ -45,6 +45,7 @@ import {
   Check
 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { Logo } from '../ui/Logo';
 import Link from 'next/link';
 import { ROUTES } from '@/utils/constants';
 
@@ -174,10 +175,7 @@ def sigmoid(x):
         <div className="p-6 pb-2">
           <Link href={ROUTES.DASHBOARD}>
             <div className="flex items-center gap-2 mb-8 cursor-pointer">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
-                <Plus size={18} />
-              </div>
-              <span className="font-bold text-xl tracking-tight text-blue-600">StudySnap</span>
+              <Logo size="md" />
             </div>
           </Link>
 
@@ -201,8 +199,8 @@ def sigmoid(x):
             <SidebarLink icon={<Mic size={18} />} label="Meetings" href="#" />
             <SidebarLink icon={<BarChart3 size={18} />} label="Analytics" href="#" />
             <SidebarLink icon={<Users size={18} />} label="Shared" href="#" />
-            <SidebarLink icon={<CreditCard size={18} />} label="Pricing" href="#" />
-            <SidebarLink icon={<Settings size={18} />} label="Settings" href="#" />
+            <SidebarLink icon={<CreditCard size={18} />} label="Pricing" href={ROUTES.PRICING} />
+            <SidebarLink icon={<Settings size={18} />} label="Settings" href={ROUTES.SETTINGS} />
           </nav>
         </div>
 

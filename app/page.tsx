@@ -1,6 +1,7 @@
 'use client';
 
 import Link from "next/link";
+import { Logo } from "../components/ui/Logo";
 import { Manrope, Playfair_Display } from "next/font/google";
 import {
   Mic,
@@ -89,7 +90,7 @@ const plans = [
   {
     name: "Free",
     price: "$0",
-    subtitle: "Get started with StudySnap",
+    subtitle: "Get started with VICHEA",
     cta: "Select Plan",
     featured: false,
     features: [
@@ -153,8 +154,8 @@ export default function Home() {
     >
       <header className="sticky top-0 z-50 w-full border-b border-[#E5E7EB] bg-[#FFFFFF]">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-5 md:px-10">
-          <Link href="/" className="text-2xl font-semibold [font-family:var(--font-heading)]">
-            StudySnap
+          <Link href="/" className="flex items-center">
+            <Logo size="md" />
           </Link>
 
           <nav className="hidden items-center gap-8 text-sm text-slate-700 md:flex">
@@ -237,7 +238,7 @@ export default function Home() {
             Everything you need to study smarter
           </h2>
           <p className="mt-4 text-slate-600">
-            StudySnap combines AI note-taking, smart organization, and science-backed
+            VICHEA combines AI note-taking, smart organization, and science-backed
             flashcards into one seamless experience.
           </p>
         </div>
@@ -298,7 +299,7 @@ export default function Home() {
                 Focus on the conversation
               </h3>
               <p className="mt-3 text-slate-600 text-sm">
-                StudySnap converts meeting audio into real-time transcripts while you stay focused on discussion.
+                VICHEA converts meeting audio into real-time transcripts while you stay focused on discussion.
               </p>
 
               {/* Live Transcript Preview */}
@@ -428,7 +429,7 @@ export default function Home() {
                   S
                 </div>
                 <div>
-                  <p className="text-[13px] font-semibold text-slate-900 leading-tight">StudySnap</p>
+                  <p className="text-[13px] font-semibold text-slate-900 leading-tight">VICHEA</p>
                   <p className="text-[11px] text-slate-500 leading-tight mt-0.5">Workspace</p>
                 </div>
               </div>
@@ -581,7 +582,7 @@ export default function Home() {
             Turn knowledge into <span className="text-[#5352ff]">long-<br className="hidden sm:block" />term memory</span>
           </h2>
           <p className="mt-6 mx-auto max-w-2xl text-[17px] text-slate-600 leading-relaxed">
-            StudySnap converts notes and meeting transcripts into intelligent<br className="hidden sm:block" />
+            VICHEA converts notes and meeting transcripts into intelligent<br className="hidden sm:block" />
             flashcards that adapt to your learning progress.
           </p>
         </div>
@@ -846,10 +847,10 @@ export default function Home() {
                 About Us
               </h3>
               <p className="text-sm text-slate-600 leading-relaxed">
-                StudySnap is an AI-powered learning platform that helps students and professionals turn meetings, lectures, and ideas into organized notes and smart flashcards.
+                VICHEA is an AI-powered learning platform that helps students and professionals turn meetings, lectures, and ideas into organized notes and smart flashcards.
               </p>
               <p className="text-sm text-slate-600 leading-relaxed mt-3">
-                From capturing knowledge to mastering it, StudySnap supports your full learning workflow.
+                From capturing knowledge to mastering it, VICHEA supports your full learning workflow.
               </p>
             </div>
 
@@ -933,8 +934,8 @@ export default function Home() {
                   </Link>
                 </li>
                 <li>
-                  <a href="mailto:support@studysnap.com" className="hover:text-slate-900 transition">
-                    support@studysnap.com
+                  <a href="mailto:support@vichea.com" className="hover:text-slate-900 transition">
+                    support@vichea.com
                   </a>
                 </li>
               </ul>
@@ -945,7 +946,7 @@ export default function Home() {
           <div className="border-t border-slate-200 pt-8 flex flex-col sm:flex-row justify-between items-center gap-6">
             {/* Copyright Text */}
             <p className="text-sm text-slate-600">
-              © 2026 StudySnap – Made for students and life long learners.
+              © 2026 VICHEA – Made for students and life long learners.
             </p>
 
             {/* Social Media Icons */}

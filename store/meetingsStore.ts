@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AIGeneratedNotes, Meeting } from '@/types';
+import { AIGeneratedNotes, Meeting, UpdateMeetingPayload } from '@/types';
 import { meetingsService } from '@/services/meetings.api';
 
 interface MeetingsStore {
@@ -14,7 +14,11 @@ interface MeetingsStore {
   updateMeeting: (id: string, updates: Partial<Meeting>) => Promise<Meeting>;
   deleteMeeting: (id: string) => Promise<void>;
   generateMeetingNotes: (id: string) => Promise<AIGeneratedNotes>;
-  uploadMeetingRecording: (id: string, file: File) => Promise<{ recordingUrl: string }>;
+  uploadMeetingRecording: (id: string, file: File) => Promise<{
+    recordingUrl: string;
+    provider?: 'vertex';
+    note?: { id: string; title: string };
+  }>;
   setSelectedMeeting: (meeting: Meeting | null) => void;
 }
 
@@ -69,7 +73,7 @@ export const useMeetingsStore = create<MeetingsStore>((set) => ({
 
   updateMeeting: async (id: string, updates: Partial<Meeting>) => {
     try {
-      const meeting = await meetingsService.updateMeeting(id, updates as any);
+      const meeting = await meetingsService.updateMeeting(id, updates as UpdateMeetingPayload);
       set((state) => ({
         meetings: state.meetings.map((m) => (m.id === id ? meeting : m)),
         selectedMeeting: state.selectedMeeting?.id === id ? meeting : state.selectedMeeting,

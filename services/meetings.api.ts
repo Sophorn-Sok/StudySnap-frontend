@@ -1,6 +1,15 @@
 import { api } from './apiClient';
 import { Meeting, CreateMeetingPayload, UpdateMeetingPayload, AIGeneratedNotes } from '@/types';
 
+type UploadMeetingMediaResponse = {
+  recordingUrl: string;
+  provider?: 'vertex';
+  note?: {
+    id: string;
+    title: string;
+  };
+};
+
 export const meetingsService = {
   async getMeetings(): Promise<Meeting[]> {
     const response = await api.get<Meeting[]>('/meetings');
@@ -33,11 +42,12 @@ export const meetingsService = {
     return response.data;
   },
 
-  async uploadRecording(id: string, file: File): Promise<{ recordingUrl: string }> {
+  async uploadRecording(id: string, file: File): Promise<UploadMeetingMediaResponse> {
     const formData = new FormData();
-    formData.append('recording', file);
-    const response = await api.post<{ recordingUrl: string }>(`/meetings/${id}/upload`, formData, {
+    formData.append('media', file);
+    const response = await api.post<UploadMeetingMediaResponse>(`/meetings/${id}/upload`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 180000,
     });
     return response.data;
   },

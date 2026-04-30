@@ -858,6 +858,33 @@ const useFlashcardStore = (0, __TURBOPACK__imported__module__$5b$project$5d2f$no
                 throw error;
             }
         },
+        updateCard: async (deckId, cardId, updates)=>{
+            try {
+                set({
+                    error: null
+                });
+                const updatedCard = await __TURBOPACK__imported__module__$5b$project$5d2f$services$2f$flashcards$2e$api$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["flashcardsService"].updateCard(deckId, cardId, updates);
+                set((state)=>({
+                        decks: state.decks.map((deck)=>{
+                            if (deck.id !== deckId) return deck;
+                            return {
+                                ...deck,
+                                cards: deck.cards.map((c)=>c.id === cardId ? updatedCard : c)
+                            };
+                        }),
+                        selectedDeck: state.selectedDeck?.id === deckId ? {
+                            ...state.selectedDeck,
+                            cards: state.selectedDeck.cards.map((c)=>c.id === cardId ? updatedCard : c)
+                        } : state.selectedDeck
+                    }));
+                return updatedCard;
+            } catch (error) {
+                set({
+                    error: error.message
+                });
+                throw error;
+            }
+        },
         startStudySession: async (deckId)=>{
             try {
                 set({
@@ -1215,6 +1242,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/index.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$book$2d$open$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__BookOpen$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/book-open.js [app-client] (ecmascript) <export default as BookOpen>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$circle$2d$check$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__CheckCircle2$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/circle-check.js [app-client] (ecmascript) <export default as CheckCircle2>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2d$3$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock3$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/clock-3.js [app-client] (ecmascript) <export default as Clock3>");
@@ -1237,9 +1265,11 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
+;
 function FlashcardsPageContent() {
     _s();
-    const { decks, selectedDeck, isLoading, error, fetchDecks, createDeck, deleteDeck, addCard, generateDeckFromMeeting, deleteCard, startStudySession, completeStudySession, setSelectedDeck } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$store$2f$flashcardStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useFlashcardStore"])();
+    const router = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"])();
+    const { decks, selectedDeck, isLoading, error, fetchDecks, createDeck, deleteDeck, addCard, generateDeckFromMeeting, deleteCard, startStudySession, completeStudySession, setSelectedDeck, updateDeck, updateCard } = (0, __TURBOPACK__imported__module__$5b$project$5d2f$store$2f$flashcardStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useFlashcardStore"])();
     const [query, setQuery] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [showCreateDeckForm, setShowCreateDeckForm] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(false);
     const [newDeckTitle, setNewDeckTitle] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
@@ -1256,6 +1286,15 @@ function FlashcardsPageContent() {
     const [selectedMeetingId, setSelectedMeetingId] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [aiSummary, setAiSummary] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
     const [aiKeyPoints, setAiKeyPoints] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
+    const [deckToDelete, setDeckToDelete] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [deckToEdit, setDeckToEdit] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [editDeckTitle, setEditDeckTitle] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [editDeckDescription, setEditDeckDescription] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [cardToDelete, setCardToDelete] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [cardToEdit, setCardToEdit] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(null);
+    const [editCardFront, setEditCardFront] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [editCardBack, setEditCardBack] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('');
+    const [editCardDifficulty, setEditCardDifficulty] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])('easy');
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
         "FlashcardsPageContent.useEffect": ()=>{
             void fetchDecks();
@@ -1382,28 +1421,91 @@ function FlashcardsPageContent() {
             setIsSubmitting(false);
         }
     };
-    const handleDeleteDeck = async ()=>{
-        if (!activeDeck) {
-            return;
+    const confirmDeleteDeck = async ()=>{
+        if (!deckToDelete) return;
+        setIsSubmitting(true);
+        setLocalError(null);
+        setFeedback(null);
+        try {
+            const nextDeck = decks.find((deck)=>deck.id !== deckToDelete.id) ?? null;
+            await deleteDeck(deckToDelete.id);
+            if (selectedDeck?.id === deckToDelete.id) {
+                setSelectedDeck(nextDeck);
+                setActiveSession(null);
+            }
+            setFeedback('Deck deleted.');
+            setDeckToDelete(null);
+        } catch (error) {
+            setLocalError(error.message);
+        } finally{
+            setIsSubmitting(false);
         }
-        const shouldDelete = window.confirm(`Delete deck "${activeDeck.title}"? This also removes all cards in the deck.`);
-        if (!shouldDelete) {
+    };
+    const confirmEditDeck = async ()=>{
+        if (!deckToEdit) return;
+        if (!editDeckTitle.trim()) {
+            setLocalError('Deck title is required.');
             return;
         }
         setIsSubmitting(true);
         setLocalError(null);
         setFeedback(null);
         try {
-            const nextDeck = decks.find((deck)=>deck.id !== activeDeck.id) ?? null;
-            await deleteDeck(activeDeck.id);
-            setSelectedDeck(nextDeck);
-            setActiveSession(null);
-            setFeedback('Deck deleted.');
-        } catch (deleteError) {
-            setLocalError(deleteError.message);
+            await updateDeck(deckToEdit.id, {
+                title: editDeckTitle.trim(),
+                description: editDeckDescription.trim()
+            });
+            setFeedback('Deck updated.');
+            setDeckToEdit(null);
+        } catch (error) {
+            setLocalError(error.message);
         } finally{
             setIsSubmitting(false);
         }
+    };
+    const confirmDeleteCard = async ()=>{
+        if (!cardToDelete || !activeDeck) return;
+        setIsSubmitting(true);
+        setLocalError(null);
+        setFeedback(null);
+        try {
+            await deleteCard(activeDeck.id, cardToDelete.id);
+            setFeedback('Card deleted.');
+            setCardToDelete(null);
+        } catch (error) {
+            setLocalError(error.message);
+        } finally{
+            setIsSubmitting(false);
+        }
+    };
+    const confirmEditCard = async ()=>{
+        if (!cardToEdit || !activeDeck) return;
+        if (!editCardFront.trim() || !editCardBack.trim()) {
+            setLocalError('Both front and back content are required.');
+            return;
+        }
+        setIsSubmitting(true);
+        setLocalError(null);
+        setFeedback(null);
+        try {
+            await updateCard(activeDeck.id, cardToEdit.id, {
+                front: editCardFront.trim(),
+                back: editCardBack.trim(),
+                difficulty: editCardDifficulty
+            });
+            setFeedback('Card updated.');
+            setCardToEdit(null);
+        } catch (error) {
+            setLocalError(error.message);
+        } finally{
+            setIsSubmitting(false);
+        }
+    };
+    const handleDeleteDeck = async ()=>{
+        if (!activeDeck) {
+            return;
+        }
+        setDeckToDelete(activeDeck);
     };
     const handleAddCard = async ()=>{
         if (!activeDeck) {
@@ -1430,6 +1532,28 @@ function FlashcardsPageContent() {
             setIsSubmitting(false);
         }
     };
+    const handleStudyNow = async ()=>{
+        if (!activeDeck) return;
+        const front = newCardFront.trim();
+        const back = newCardBack.trim();
+        // If user has filled in card fields, add the card first
+        if (front && back) {
+            setIsSubmitting(true);
+            setLocalError(null);
+            try {
+                await addCard(activeDeck.id, front, back, newCardDifficulty);
+                setNewCardFront('');
+                setNewCardBack('');
+                setNewCardDifficulty('easy');
+            } catch (addError) {
+                setLocalError(addError.message);
+                setIsSubmitting(false);
+                return;
+            }
+            setIsSubmitting(false);
+        }
+        router.push(`/flashcards/study?deckId=${activeDeck.id}`);
+    };
     const handleGenerateDeckFromTranscript = async ()=>{
         if (!selectedMeetingId) {
             setLocalError('Select a meeting transcript first.');
@@ -1454,14 +1578,7 @@ function FlashcardsPageContent() {
         if (!activeDeck) {
             return;
         }
-        setLocalError(null);
-        setFeedback(null);
-        try {
-            await deleteCard(activeDeck.id, card.id);
-            setFeedback('Card deleted.');
-        } catch (deleteError) {
-            setLocalError(deleteError.message);
-        }
+        setCardToDelete(card);
     };
     const handleStartStudy = async ()=>{
         if (!activeDeck) {
@@ -1517,7 +1634,7 @@ function FlashcardsPageContent() {
                                 children: "Flashcards"
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 291,
+                                lineNumber: 383,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1529,20 +1646,20 @@ function FlashcardsPageContent() {
                                         size: 14
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 293,
+                                        lineNumber: 385,
                                         columnNumber: 13
                                     }, this),
                                     " New Deck"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 292,
+                                lineNumber: 384,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 290,
+                        lineNumber: 382,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1555,14 +1672,14 @@ function FlashcardsPageContent() {
                                         size: 14
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 299,
+                                        lineNumber: 391,
                                         columnNumber: 13
                                     }, this),
                                     " AI from transcript"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 298,
+                                lineNumber: 390,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -1574,19 +1691,19 @@ function FlashcardsPageContent() {
                                     children: "No meetings found"
                                 }, void 0, false, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 308,
+                                    lineNumber: 400,
                                     columnNumber: 15
                                 }, this) : meetings.map((meeting)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                         value: meeting.id,
                                         children: meeting.title
                                     }, meeting.id, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 311,
+                                        lineNumber: 403,
                                         columnNumber: 17
                                     }, this))
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 302,
+                                lineNumber: 394,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1600,20 +1717,20 @@ function FlashcardsPageContent() {
                                         size: 14
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 325,
+                                        lineNumber: 417,
                                         columnNumber: 13
                                     }, this),
                                     " Generate AI Deck"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 318,
+                                lineNumber: 410,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 297,
+                        lineNumber: 389,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1624,7 +1741,7 @@ function FlashcardsPageContent() {
                                 size: 16
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 330,
+                                lineNumber: 422,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -1635,13 +1752,13 @@ function FlashcardsPageContent() {
                                 className: "w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 331,
+                                lineNumber: 423,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 329,
+                        lineNumber: 421,
                         columnNumber: 9
                     }, this),
                     showCreateDeckForm && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1655,7 +1772,7 @@ function FlashcardsPageContent() {
                                 className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 342,
+                                lineNumber: 434,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -1666,7 +1783,7 @@ function FlashcardsPageContent() {
                                 className: "w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 349,
+                                lineNumber: 441,
                                 columnNumber: 13
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1679,7 +1796,7 @@ function FlashcardsPageContent() {
                                         children: "Cancel"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 357,
+                                        lineNumber: 449,
                                         columnNumber: 15
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -1689,19 +1806,19 @@ function FlashcardsPageContent() {
                                         children: "Create"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 360,
+                                        lineNumber: 452,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 356,
+                                lineNumber: 448,
                                 columnNumber: 13
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 341,
+                        lineNumber: 433,
                         columnNumber: 11
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1715,7 +1832,7 @@ function FlashcardsPageContent() {
                                         children: "Decks"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 369,
+                                        lineNumber: 461,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1723,13 +1840,13 @@ function FlashcardsPageContent() {
                                         children: stats.totalDecks
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 370,
+                                        lineNumber: 462,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 368,
+                                lineNumber: 460,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1740,7 +1857,7 @@ function FlashcardsPageContent() {
                                         children: "Cards"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 373,
+                                        lineNumber: 465,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1748,19 +1865,19 @@ function FlashcardsPageContent() {
                                         children: stats.totalCards
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 374,
+                                        lineNumber: 466,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 372,
+                                lineNumber: 464,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 367,
+                        lineNumber: 459,
                         columnNumber: 9
                     }, this),
                     isLoading && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1768,7 +1885,7 @@ function FlashcardsPageContent() {
                         children: "Loading decks..."
                     }, void 0, false, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 378,
+                        lineNumber: 470,
                         columnNumber: 23
                     }, this),
                     (error || localError) && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1776,7 +1893,7 @@ function FlashcardsPageContent() {
                         children: localError ?? error
                     }, void 0, false, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 379,
+                        lineNumber: 471,
                         columnNumber: 35
                     }, this),
                     feedback && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1784,7 +1901,7 @@ function FlashcardsPageContent() {
                         children: feedback
                     }, void 0, false, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 380,
+                        lineNumber: 472,
                         columnNumber: 22
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1795,25 +1912,24 @@ function FlashcardsPageContent() {
                                 children: "No decks found."
                             }, void 0, false, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 383,
+                                lineNumber: 475,
                                 columnNumber: 56
                             }, this),
                             filteredDecks.map((deck)=>{
                                 const active = activeDeck?.id === deck.id;
-                                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                    type: "button",
+                                return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                    className: `w-full rounded-xl border px-3 py-3 text-left transition cursor-pointer ${active ? 'border-blue-200 bg-blue-50/60' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`,
                                     onClick: ()=>{
                                         setSelectedDeck(deck);
                                         setActiveSession(null);
                                     },
-                                    className: `w-full rounded-xl border px-3 py-3 text-left transition ${active ? 'border-blue-200 bg-blue-50/60' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}`,
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                             className: "truncate text-sm font-semibold text-slate-900",
                                             children: deck.title
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 401,
+                                            lineNumber: 492,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1826,43 +1942,75 @@ function FlashcardsPageContent() {
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 402,
+                                            lineNumber: 493,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            className: "mt-2 flex items-center gap-1 text-[11px] text-slate-400",
+                                            className: "mt-2 flex items-center justify-between",
                                             children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2d$3$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock3$3e$__["Clock3"], {
-                                                    size: 12
-                                                }, void 0, false, {
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    className: "flex items-center gap-1 text-[11px] text-slate-400",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$clock$2d$3$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Clock3$3e$__["Clock3"], {
+                                                            size: 12
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/flashcard/page.tsx",
+                                                            lineNumber: 498,
+                                                            columnNumber: 21
+                                                        }, this),
+                                                        (0, __TURBOPACK__imported__module__$5b$project$5d2f$utils$2f$helpers$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getRelativeTime"])(deck.updatedAt)
+                                                    ]
+                                                }, void 0, true, {
                                                     fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 406,
+                                                    lineNumber: 497,
                                                     columnNumber: 19
                                                 }, this),
-                                                (0, __TURBOPACK__imported__module__$5b$project$5d2f$utils$2f$helpers$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["getRelativeTime"])(deck.updatedAt)
+                                                deck.cardCount > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                    type: "button",
+                                                    onClick: (e)=>{
+                                                        e.stopPropagation();
+                                                        router.push(`/flashcards/study?deckId=${deck.id}`);
+                                                    },
+                                                    className: "inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 hover:text-blue-700 transition",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
+                                                            size: 10,
+                                                            fill: "currentColor"
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/components/flashcard/page.tsx",
+                                                            lineNumber: 510,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        " Study"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/components/flashcard/page.tsx",
+                                                    lineNumber: 502,
+                                                    columnNumber: 21
+                                                }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 405,
+                                            lineNumber: 496,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, deck.id, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 388,
+                                    lineNumber: 480,
                                     columnNumber: 15
                                 }, this);
                             })
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 382,
+                        lineNumber: 474,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/flashcard/page.tsx",
-                lineNumber: 289,
+                lineNumber: 381,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("main", {
@@ -1872,7 +2020,7 @@ function FlashcardsPageContent() {
                     children: "Create or select a deck to start managing flashcards."
                 }, void 0, false, {
                     fileName: "[project]/components/flashcard/page.tsx",
-                    lineNumber: 417,
+                    lineNumber: 522,
                     columnNumber: 11
                 }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                     className: "mx-auto max-w-5xl space-y-6",
@@ -1887,7 +2035,7 @@ function FlashcardsPageContent() {
                                             children: activeDeck.title
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 424,
+                                            lineNumber: 529,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1895,67 +2043,46 @@ function FlashcardsPageContent() {
                                             children: activeDeck.description ?? 'No description yet.'
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 425,
+                                            lineNumber: 530,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 423,
+                                    lineNumber: 528,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     className: "flex items-center gap-2",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                                            variant: "outline",
-                                            size: "sm",
-                                            onClick: handleDeleteDeck,
-                                            isLoading: isSubmitting,
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"], {
-                                                    size: 14
-                                                }, void 0, false, {
-                                                    fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 430,
-                                                    columnNumber: 19
-                                                }, this),
-                                                " Delete Deck"
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 429,
-                                            columnNumber: 17
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
-                                            size: "sm",
-                                            onClick: handleStartStudy,
-                                            isLoading: isSubmitting,
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
-                                                    size: 14
-                                                }, void 0, false, {
-                                                    fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 433,
-                                                    columnNumber: 19
-                                                }, this),
-                                                " Study Now"
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 432,
-                                            columnNumber: 17
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
+                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
+                                        variant: "outline",
+                                        size: "sm",
+                                        onClick: handleDeleteDeck,
+                                        isLoading: isSubmitting,
+                                        children: [
+                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$trash$2d$2$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Trash2$3e$__["Trash2"], {
+                                                size: 14
+                                            }, void 0, false, {
+                                                fileName: "[project]/components/flashcard/page.tsx",
+                                                lineNumber: 535,
+                                                columnNumber: 19
+                                            }, this),
+                                            " Delete Deck"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "[project]/components/flashcard/page.tsx",
+                                        lineNumber: 534,
+                                        columnNumber: 17
+                                    }, this)
+                                }, void 0, false, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 428,
+                                    lineNumber: 533,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/flashcard/page.tsx",
-                            lineNumber: 422,
+                            lineNumber: 527,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1969,7 +2096,7 @@ function FlashcardsPageContent() {
                                             children: "Cards in Deck"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 440,
+                                            lineNumber: 542,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1977,13 +2104,13 @@ function FlashcardsPageContent() {
                                             children: activeDeck.cardCount
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 441,
+                                            lineNumber: 543,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 439,
+                                    lineNumber: 541,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1994,7 +2121,7 @@ function FlashcardsPageContent() {
                                             children: "Mastered"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 444,
+                                            lineNumber: 546,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2002,13 +2129,13 @@ function FlashcardsPageContent() {
                                             children: activeDeck.cards.filter((card)=>card.reviewCount >= 5).length
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 445,
+                                            lineNumber: 547,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 443,
+                                    lineNumber: 545,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2019,7 +2146,7 @@ function FlashcardsPageContent() {
                                             children: "Due for Review"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 448,
+                                            lineNumber: 550,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2027,19 +2154,19 @@ function FlashcardsPageContent() {
                                             children: activeDeck.cards.filter((card)=>card.reviewCount < 2).length
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 449,
+                                            lineNumber: 551,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 447,
+                                    lineNumber: 549,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/flashcard/page.tsx",
-                            lineNumber: 438,
+                            lineNumber: 540,
                             columnNumber: 13
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2053,14 +2180,14 @@ function FlashcardsPageContent() {
                                             className: "text-blue-500"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 455,
+                                            lineNumber: 557,
                                             columnNumber: 17
                                         }, this),
                                         "Add a card to this deck"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 454,
+                                    lineNumber: 556,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2074,7 +2201,7 @@ function FlashcardsPageContent() {
                                             className: "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 460,
+                                            lineNumber: 562,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("textarea", {
@@ -2085,13 +2212,13 @@ function FlashcardsPageContent() {
                                             className: "w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 467,
+                                            lineNumber: 569,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 459,
+                                    lineNumber: 561,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2107,7 +2234,7 @@ function FlashcardsPageContent() {
                                                     children: "Easy"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 482,
+                                                    lineNumber: 584,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2115,7 +2242,7 @@ function FlashcardsPageContent() {
                                                     children: "Medium"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 483,
+                                                    lineNumber: 585,
                                                     columnNumber: 19
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
@@ -2123,44 +2250,44 @@ function FlashcardsPageContent() {
                                                     children: "Hard"
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 484,
+                                                    lineNumber: 586,
                                                     columnNumber: 19
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 477,
+                                            lineNumber: 579,
                                             columnNumber: 17
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
                                             size: "sm",
-                                            onClick: handleAddCard,
+                                            onClick: handleStudyNow,
                                             isLoading: isSubmitting,
                                             children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$plus$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Plus$3e$__["Plus"], {
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
                                                     size: 14
                                                 }, void 0, false, {
                                                     fileName: "[project]/components/flashcard/page.tsx",
-                                                    lineNumber: 488,
+                                                    lineNumber: 590,
                                                     columnNumber: 19
                                                 }, this),
-                                                " Add Card"
+                                                " Study Now"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 487,
+                                            lineNumber: 589,
                                             columnNumber: 17
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 476,
+                                    lineNumber: 578,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/flashcard/page.tsx",
-                            lineNumber: 453,
+                            lineNumber: 555,
                             columnNumber: 13
                         }, this),
                         activeSession && activeSession.deckId === activeDeck.id && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2173,14 +2300,14 @@ function FlashcardsPageContent() {
                                             size: 16
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 496,
+                                            lineNumber: 598,
                                             columnNumber: 19
                                         }, this),
                                         "Active study session"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 495,
+                                    lineNumber: 597,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2188,7 +2315,7 @@ function FlashcardsPageContent() {
                                     children: "Enter how many answers you got correct before completing this session."
                                 }, void 0, false, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 499,
+                                    lineNumber: 601,
                                     columnNumber: 17
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2203,7 +2330,7 @@ function FlashcardsPageContent() {
                                             className: "w-40 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 501,
+                                            lineNumber: 603,
                                             columnNumber: 19
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Button$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Button"], {
@@ -2213,19 +2340,19 @@ function FlashcardsPageContent() {
                                             children: "Complete Session"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 509,
+                                            lineNumber: 611,
                                             columnNumber: 19
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 500,
+                                    lineNumber: 602,
                                     columnNumber: 17
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/flashcard/page.tsx",
-                            lineNumber: 494,
+                            lineNumber: 596,
                             columnNumber: 15
                         }, this),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("section", {
@@ -2239,7 +2366,7 @@ function FlashcardsPageContent() {
                                             className: "text-indigo-500"
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 518,
+                                            lineNumber: 620,
                                             columnNumber: 17
                                         }, this),
                                         "Cards (",
@@ -2248,7 +2375,7 @@ function FlashcardsPageContent() {
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 517,
+                                    lineNumber: 619,
                                     columnNumber: 15
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2259,7 +2386,7 @@ function FlashcardsPageContent() {
                                             children: "No cards yet. Add your first flashcard above."
                                         }, void 0, false, {
                                             fileName: "[project]/components/flashcard/page.tsx",
-                                            lineNumber: 524,
+                                            lineNumber: 626,
                                             columnNumber: 19
                                         }, this),
                                         activeDeck.cards.map((card)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("article", {
@@ -2273,7 +2400,7 @@ function FlashcardsPageContent() {
                                                                 children: card.difficulty
                                                             }, void 0, false, {
                                                                 fileName: "[project]/components/flashcard/page.tsx",
-                                                                lineNumber: 530,
+                                                                lineNumber: 632,
                                                                 columnNumber: 23
                                                             }, this),
                                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2286,7 +2413,7 @@ function FlashcardsPageContent() {
                                                                         ]
                                                                     }, void 0, true, {
                                                                         fileName: "[project]/components/flashcard/page.tsx",
-                                                                        lineNumber: 534,
+                                                                        lineNumber: 636,
                                                                         columnNumber: 25
                                                                     }, this),
                                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -2296,19 +2423,19 @@ function FlashcardsPageContent() {
                                                                         children: "Delete"
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/components/flashcard/page.tsx",
-                                                                        lineNumber: 535,
+                                                                        lineNumber: 637,
                                                                         columnNumber: 25
                                                                     }, this)
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/components/flashcard/page.tsx",
-                                                                lineNumber: 533,
+                                                                lineNumber: 635,
                                                                 columnNumber: 23
                                                             }, this)
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/flashcard/page.tsx",
-                                                        lineNumber: 529,
+                                                        lineNumber: 631,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2319,7 +2446,7 @@ function FlashcardsPageContent() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/flashcard/page.tsx",
-                                                        lineNumber: 544,
+                                                        lineNumber: 646,
                                                         columnNumber: 21
                                                     }, this),
                                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2330,36 +2457,63 @@ function FlashcardsPageContent() {
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/components/flashcard/page.tsx",
-                                                        lineNumber: 545,
+                                                        lineNumber: 647,
+                                                        columnNumber: 21
+                                                    }, this),
+                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        className: "mt-2 flex justify-end",
+                                                        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                            type: "button",
+                                                            onClick: ()=>router.push(`/flashcards/study?deckId=${activeDeck.id}`),
+                                                            className: "inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1 text-[11px] font-medium text-white hover:bg-blue-700 transition-colors",
+                                                            children: [
+                                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$play$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Play$3e$__["Play"], {
+                                                                    size: 10,
+                                                                    fill: "currentColor"
+                                                                }, void 0, false, {
+                                                                    fileName: "[project]/components/flashcard/page.tsx",
+                                                                    lineNumber: 654,
+                                                                    columnNumber: 25
+                                                                }, this),
+                                                                " Study"
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "[project]/components/flashcard/page.tsx",
+                                                            lineNumber: 649,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/components/flashcard/page.tsx",
+                                                        lineNumber: 648,
                                                         columnNumber: 21
                                                     }, this)
                                                 ]
                                             }, card.id, true, {
                                                 fileName: "[project]/components/flashcard/page.tsx",
-                                                lineNumber: 528,
+                                                lineNumber: 630,
                                                 columnNumber: 19
                                             }, this))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/flashcard/page.tsx",
-                                    lineNumber: 522,
+                                    lineNumber: 624,
                                     columnNumber: 15
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/flashcard/page.tsx",
-                            lineNumber: 516,
+                            lineNumber: 618,
                             columnNumber: 13
                         }, this)
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/flashcard/page.tsx",
-                    lineNumber: 421,
+                    lineNumber: 526,
                     columnNumber: 11
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/components/flashcard/page.tsx",
-                lineNumber: 415,
+                lineNumber: 520,
                 columnNumber: 7
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("aside", {
@@ -2370,7 +2524,7 @@ function FlashcardsPageContent() {
                         children: "Study Summary"
                     }, void 0, false, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 555,
+                        lineNumber: 666,
                         columnNumber: 9
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2384,7 +2538,7 @@ function FlashcardsPageContent() {
                                         children: "Cards Mastered"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 558,
+                                        lineNumber: 669,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2392,13 +2546,13 @@ function FlashcardsPageContent() {
                                         children: stats.masteredCards
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 559,
+                                        lineNumber: 670,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 557,
+                                lineNumber: 668,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2409,7 +2563,7 @@ function FlashcardsPageContent() {
                                         children: "Due Today"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 562,
+                                        lineNumber: 673,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2417,13 +2571,13 @@ function FlashcardsPageContent() {
                                         children: stats.dueCards
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 563,
+                                        lineNumber: 674,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 561,
+                                lineNumber: 672,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2434,7 +2588,7 @@ function FlashcardsPageContent() {
                                         children: "Total Cards"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 566,
+                                        lineNumber: 677,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2442,13 +2596,13 @@ function FlashcardsPageContent() {
                                         children: stats.totalCards
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 567,
+                                        lineNumber: 678,
                                         columnNumber: 13
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 565,
+                                lineNumber: 676,
                                 columnNumber: 11
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2459,7 +2613,7 @@ function FlashcardsPageContent() {
                                         children: "AI Transcript Summary"
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 571,
+                                        lineNumber: 682,
                                         columnNumber: 13
                                     }, this),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -2467,7 +2621,7 @@ function FlashcardsPageContent() {
                                         children: aiSummary || 'Generate an AI deck from a meeting transcript to see the summary here.'
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 572,
+                                        lineNumber: 683,
                                         columnNumber: 13
                                     }, this),
                                     aiKeyPoints.length > 0 && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("ul", {
@@ -2479,41 +2633,42 @@ function FlashcardsPageContent() {
                                                 ]
                                             }, `ai-key-point-${index}`, true, {
                                                 fileName: "[project]/components/flashcard/page.tsx",
-                                                lineNumber: 578,
+                                                lineNumber: 689,
                                                 columnNumber: 19
                                             }, this))
                                     }, void 0, false, {
                                         fileName: "[project]/components/flashcard/page.tsx",
-                                        lineNumber: 576,
+                                        lineNumber: 687,
                                         columnNumber: 15
                                     }, this)
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/flashcard/page.tsx",
-                                lineNumber: 570,
+                                lineNumber: 681,
                                 columnNumber: 11
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/flashcard/page.tsx",
-                        lineNumber: 556,
+                        lineNumber: 667,
                         columnNumber: 9
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/flashcard/page.tsx",
-                lineNumber: 554,
+                lineNumber: 665,
                 columnNumber: 7
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/components/flashcard/page.tsx",
-        lineNumber: 288,
+        lineNumber: 380,
         columnNumber: 5
     }, this);
 }
-_s(FlashcardsPageContent, "B/6rbBSSbdJ0NCq1H/MhB+VibkQ=", false, function() {
+_s(FlashcardsPageContent, "Zp4ziQNrb8BIG1zpe63xdyPWTTo=", false, function() {
     return [
+        __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useRouter"],
         __TURBOPACK__imported__module__$5b$project$5d2f$store$2f$flashcardStore$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useFlashcardStore"]
     ];
 });
@@ -2625,6 +2780,87 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
 }),
+"[project]/components/ui/Logo.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
+"use strict";
+
+__turbopack_context__.s([
+    "Logo",
+    ()=>Logo
+]);
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$boxes$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Boxes$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/boxes.js [app-client] (ecmascript) <export default as Boxes>");
+'use client';
+;
+;
+const Logo = ({ size = 'md', variant = 'dark', className = '', showText = true })=>{
+    const sizes = {
+        sm: 'text-lg',
+        md: 'text-2xl',
+        lg: 'text-3xl',
+        xl: 'text-4xl',
+        '2xl': 'text-5xl'
+    };
+    const iconWrapperSizes = {
+        sm: 'p-1 rounded-lg',
+        md: 'p-1.5 rounded-xl',
+        lg: 'p-2 rounded-xl',
+        xl: 'p-2.5 rounded-2xl',
+        '2xl': 'p-3 rounded-2xl'
+    };
+    const iconSizes = {
+        sm: 16,
+        md: 20,
+        lg: 28,
+        xl: 36,
+        '2xl': 48
+    };
+    const colorClass = variant === 'light' ? 'text-white' : 'text-slate-900 dark:text-white';
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+        className: `flex items-center gap-3 font-bold select-none group ${className}`,
+        children: [
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: `
+        bg-gradient-to-br from-blue-500 via-indigo-500 to-blue-600 
+        shadow-lg shadow-blue-500/20 
+        transition-all duration-500 group-hover:scale-110 group-hover:rotate-6
+        flex items-center justify-center
+        ${iconWrapperSizes[size]}
+      `,
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$boxes$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Boxes$3e$__["Boxes"], {
+                    size: iconSizes[size],
+                    className: "text-white"
+                }, void 0, false, {
+                    fileName: "[project]/components/ui/Logo.tsx",
+                    lineNumber: 54,
+                    columnNumber: 9
+                }, ("TURBOPACK compile-time value", void 0))
+            }, void 0, false, {
+                fileName: "[project]/components/ui/Logo.tsx",
+                lineNumber: 47,
+                columnNumber: 7
+            }, ("TURBOPACK compile-time value", void 0)),
+            showText && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                className: `${sizes[size]} ${colorClass} font-serif transition-colors duration-300`,
+                children: "VICHEA"
+            }, void 0, false, {
+                fileName: "[project]/components/ui/Logo.tsx",
+                lineNumber: 57,
+                columnNumber: 9
+            }, ("TURBOPACK compile-time value", void 0))
+        ]
+    }, void 0, true, {
+        fileName: "[project]/components/ui/Logo.tsx",
+        lineNumber: 46,
+        columnNumber: 5
+    }, ("TURBOPACK compile-time value", void 0));
+};
+_c = Logo;
+var _c;
+__turbopack_context__.k.register(_c, "Logo");
+if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
+    __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
+}
+}),
 "[project]/components/layout/Sidebar.tsx [app-client] (ecmascript)", ((__turbopack_context__) => {
 "use strict";
 
@@ -2636,6 +2872,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/app-dir/link.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/navigation.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$utils$2f$constants$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/utils/constants.ts [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Logo$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/Logo.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$layout$2d$dashboard$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__LayoutDashboard$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/layout-dashboard.js [app-client] (ecmascript) <export default as LayoutDashboard>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$file$2d$text$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__FileText$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/file-text.js [app-client] (ecmascript) <export default as FileText>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$brain$2d$circuit$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__BrainCircuit$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/brain-circuit.js [app-client] (ecmascript) <export default as BrainCircuit>");
@@ -2648,6 +2885,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$clsx$2f$dist
 ;
 var _s = __turbopack_context__.k.signature();
 'use client';
+;
 ;
 ;
 ;
@@ -2718,7 +2956,7 @@ const Sidebar = ()=>{
                         size: 20
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Sidebar.tsx",
-                        lineNumber: 63,
+                        lineNumber: 64,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -2726,38 +2964,36 @@ const Sidebar = ()=>{
                         children: item.name
                     }, void 0, false, {
                         fileName: "[project]/components/layout/Sidebar.tsx",
-                        lineNumber: 64,
+                        lineNumber: 65,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/components/layout/Sidebar.tsx",
-                lineNumber: 53,
+                lineNumber: 54,
                 columnNumber: 9
             }, ("TURBOPACK compile-time value", void 0))
         }, item.name, false, {
             fileName: "[project]/components/layout/Sidebar.tsx",
-            lineNumber: 52,
+            lineNumber: 53,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0));
     };
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
         className: "w-full flex flex-col p-6 h-full font-sans bg-white",
         children: [
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                href: "/",
-                className: "flex items-center gap-2 mb-10 hover:opacity-80 transition-opacity",
-                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                    className: "font-bold text-xl tracking-tight text-gray-900",
-                    children: "VICHEA"
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                className: "flex items-center gap-2 mb-10",
+                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Logo$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Logo"], {
+                    size: "md"
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Sidebar.tsx",
-                    lineNumber: 73,
+                    lineNumber: 74,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/components/layout/Sidebar.tsx",
-                lineNumber: 72,
+                lineNumber: 73,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
@@ -2767,12 +3003,12 @@ const Sidebar = ()=>{
                     children: navItems.map(renderItem)
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Sidebar.tsx",
-                    lineNumber: 77,
+                    lineNumber: 78,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/components/layout/Sidebar.tsx",
-                lineNumber: 76,
+                lineNumber: 77,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -2782,18 +3018,18 @@ const Sidebar = ()=>{
                     children: bottomItems.map(renderItem)
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Sidebar.tsx",
-                    lineNumber: 81,
+                    lineNumber: 82,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/components/layout/Sidebar.tsx",
-                lineNumber: 80,
+                lineNumber: 81,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/components/layout/Sidebar.tsx",
-        lineNumber: 71,
+        lineNumber: 72,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -4068,6 +4304,7 @@ __turbopack_context__.s([
 ]);
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/compiled/react/jsx-dev-runtime.js [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/node_modules/next/dist/client/app-dir/link.js [app-client] (ecmascript)");
+var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Logo$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/ui/Logo.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$search$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Search$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/search.js [app-client] (ecmascript) <export default as Search>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$bell$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Bell$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/bell.js [app-client] (ecmascript) <export default as Bell>");
 var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$menu$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Menu$3e$__ = __turbopack_context__.i("[project]/node_modules/lucide-react/dist/esm/icons/menu.js [app-client] (ecmascript) <export default as Menu>");
@@ -4077,6 +4314,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$sheet$2e
 var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$dashboard$2f$AvatarDropdown$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/components/dashboard/AvatarDropdown.tsx [app-client] (ecmascript)");
 var __TURBOPACK__imported__module__$5b$project$5d2f$utils$2f$constants$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__ = __turbopack_context__.i("[project]/utils/constants.ts [app-client] (ecmascript)");
 'use client';
+;
 ;
 ;
 ;
@@ -4139,17 +4377,17 @@ const Navbar = ()=>{
                                             className: "w-5 h-5 text-gray-700"
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Navbar.tsx",
-                                            lineNumber: 39,
+                                            lineNumber: 40,
                                             columnNumber: 17
                                         }, ("TURBOPACK compile-time value", void 0))
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/Navbar.tsx",
-                                        lineNumber: 35,
+                                        lineNumber: 36,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/Navbar.tsx",
-                                    lineNumber: 34,
+                                    lineNumber: 35,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$sheet$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["SheetContent"], {
@@ -4158,25 +4396,16 @@ const Navbar = ()=>{
                                     children: [
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             className: "p-5 border-b border-gray-100",
-                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                                                href: "/",
-                                                className: "flex items-center gap-2 hover:opacity-80 transition-opacity",
-                                                children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                                    className: "font-bold text-lg text-gray-900",
-                                                    children: "VICHEA"
-                                                }, void 0, false, {
-                                                    fileName: "[project]/components/layout/Navbar.tsx",
-                                                    lineNumber: 45,
-                                                    columnNumber: 19
-                                                }, ("TURBOPACK compile-time value", void 0))
+                                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Logo$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Logo"], {
+                                                size: "md"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                                lineNumber: 44,
+                                                lineNumber: 45,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Navbar.tsx",
-                                            lineNumber: 43,
+                                            lineNumber: 44,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4187,46 +4416,38 @@ const Navbar = ()=>{
                                                     children: item.label
                                                 }, item.href, false, {
                                                     fileName: "[project]/components/layout/Navbar.tsx",
-                                                    lineNumber: 50,
+                                                    lineNumber: 49,
                                                     columnNumber: 19
                                                 }, ("TURBOPACK compile-time value", void 0)))
                                         }, void 0, false, {
                                             fileName: "[project]/components/layout/Navbar.tsx",
-                                            lineNumber: 48,
+                                            lineNumber: 47,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/components/layout/Navbar.tsx",
-                                    lineNumber: 42,
+                                    lineNumber: 43,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/layout/Navbar.tsx",
-                            lineNumber: 33,
+                            lineNumber: 34,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
-                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                            href: "/",
-                            className: "lg:hidden flex items-center gap-1.5 hover:opacity-80 transition-opacity",
-                            children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "text-sm font-semibold text-gray-900",
-                                children: "VICHEA"
-                            }, void 0, false, {
-                                fileName: "[project]/components/layout/Navbar.tsx",
-                                lineNumber: 62,
-                                columnNumber: 13
-                            }, ("TURBOPACK compile-time value", void 0))
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$Logo$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Logo"], {
+                            size: "sm",
+                            className: "lg:hidden"
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Navbar.tsx",
-                            lineNumber: 61,
+                            lineNumber: 60,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Navbar.tsx",
-                    lineNumber: 32,
+                    lineNumber: 33,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4239,12 +4460,12 @@ const Navbar = ()=>{
                                     className: "w-4 h-4 text-gray-400"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/Navbar.tsx",
-                                    lineNumber: 70,
+                                    lineNumber: 67,
                                     columnNumber: 15
                                 }, ("TURBOPACK compile-time value", void 0))
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                lineNumber: 69,
+                                lineNumber: 66,
                                 columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0)),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$input$2d$group$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["InputGroupInput"], {
@@ -4253,18 +4474,18 @@ const Navbar = ()=>{
                                 className: "h-9 placeholder:text-gray-400"
                             }, void 0, false, {
                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                lineNumber: 72,
+                                lineNumber: 69,
                                 columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0))
                         ]
                     }, void 0, true, {
                         fileName: "[project]/components/layout/Navbar.tsx",
-                        lineNumber: 68,
+                        lineNumber: 65,
                         columnNumber: 11
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/components/layout/Navbar.tsx",
-                    lineNumber: 67,
+                    lineNumber: 64,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -4279,7 +4500,7 @@ const Navbar = ()=>{
                                         children: "Create"
                                     }, void 0, false, {
                                         fileName: "[project]/components/layout/Navbar.tsx",
-                                        lineNumber: 84,
+                                        lineNumber: 81,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0)),
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$menubar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MenubarContent"], {
@@ -4291,7 +4512,7 @@ const Navbar = ()=>{
                                                 children: "New Note"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                                lineNumber: 88,
+                                                lineNumber: 85,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$menubar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MenubarItem"], {
@@ -4299,7 +4520,7 @@ const Navbar = ()=>{
                                                 children: "New Deck"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                                lineNumber: 91,
+                                                lineNumber: 88,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$menubar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MenubarItem"], {
@@ -4307,7 +4528,7 @@ const Navbar = ()=>{
                                                 children: "Start Meeting"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                                lineNumber: 94,
+                                                lineNumber: 91,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0)),
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$ui$2f$menubar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["MenubarItem"], {
@@ -4315,24 +4536,24 @@ const Navbar = ()=>{
                                                 children: "Upload Recording"
                                             }, void 0, false, {
                                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                                lineNumber: 97,
+                                                lineNumber: 94,
                                                 columnNumber: 17
                                             }, ("TURBOPACK compile-time value", void 0))
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/components/layout/Navbar.tsx",
-                                        lineNumber: 87,
+                                        lineNumber: 84,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/components/layout/Navbar.tsx",
-                                lineNumber: 83,
+                                lineNumber: 80,
                                 columnNumber: 13
                             }, ("TURBOPACK compile-time value", void 0))
                         }, void 0, false, {
                             fileName: "[project]/components/layout/Navbar.tsx",
-                            lineNumber: 82,
+                            lineNumber: 79,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -4342,42 +4563,42 @@ const Navbar = ()=>{
                                     className: "w-5 h-5 text-gray-600"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/Navbar.tsx",
-                                    lineNumber: 105,
+                                    lineNumber: 102,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                     className: "absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"
                                 }, void 0, false, {
                                     fileName: "[project]/components/layout/Navbar.tsx",
-                                    lineNumber: 106,
+                                    lineNumber: 103,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/components/layout/Navbar.tsx",
-                            lineNumber: 104,
+                            lineNumber: 101,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$components$2f$dashboard$2f$AvatarDropdown$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["AvatarDropdown"], {}, void 0, false, {
                             fileName: "[project]/components/layout/Navbar.tsx",
-                            lineNumber: 109,
+                            lineNumber: 106,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     ]
                 }, void 0, true, {
                     fileName: "[project]/components/layout/Navbar.tsx",
-                    lineNumber: 81,
+                    lineNumber: 78,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             ]
         }, void 0, true, {
             fileName: "[project]/components/layout/Navbar.tsx",
-            lineNumber: 31,
+            lineNumber: 32,
             columnNumber: 7
         }, ("TURBOPACK compile-time value", void 0))
     }, void 0, false, {
         fileName: "[project]/components/layout/Navbar.tsx",
-        lineNumber: 30,
+        lineNumber: 31,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };
@@ -4442,4 +4663,4 @@ if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelper
 }),
 ]);
 
-//# sourceMappingURL=_f974d817._.js.map
+//# sourceMappingURL=_5affb689._.js.map
