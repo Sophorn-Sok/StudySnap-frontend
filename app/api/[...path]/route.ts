@@ -2171,6 +2171,30 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
+    if (!String(meeting.transcript ?? '').trim()) {
+      const botId = extractBotIdFromRecordingUrl(meeting.recordingUrl ?? null);
+      if (botId) {
+        const hydratedTranscript = await fetchTranscriptViaBackend(botId);
+        if (hydratedTranscript) {
+          const { error: updateError } = await db
+            .from('meetings')
+            .update({
+              transcript: hydratedTranscript,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', meetingId)
+            .eq('user_id', authContext.user.id);
+
+          if (!updateError) {
+            return json({
+              ...meeting,
+              transcript: hydratedTranscript,
+            });
+          }
+        }
+      }
+    }
+
     return json(meeting);
   }
 
