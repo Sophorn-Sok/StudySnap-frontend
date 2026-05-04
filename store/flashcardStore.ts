@@ -19,6 +19,7 @@ interface FlashcardStore {
   addCard: (deckId: string, front: string, back: string, difficulty?: 'easy' | 'medium' | 'hard') => Promise<Flashcard>;
   generateDeckFromMeeting: (meetingId: string, options?: { title?: string; maxCards?: number }) => Promise<AIGeneratedDeckResponse>;
   deleteCard: (deckId: string, cardId: string) => Promise<void>;
+  updateCard: (deckId: string, cardId: string, updates: Partial<{ front: string; back: string; difficulty: 'easy' | 'medium' | 'hard' }>) => Promise<Flashcard>;
   startStudySession: (deckId: string) => Promise<StudySession>;
   completeStudySession: (sessionId: string, correctAnswers: number) => Promise<StudySession>;
   setSelectedDeck: (deck: FlashcardDeck | null) => void;
@@ -183,6 +184,33 @@ export const useFlashcardStore = create<FlashcardStore>((set) => ({
               }
             : state.selectedDeck,
       }));
+    } catch (error) {
+      set({ error: (error as Error).message });
+      throw error;
+    }
+  },
+
+  updateCard: async (deckId: string, cardId: string, updates: Partial<{ front: string; back: string; difficulty: 'easy' | 'medium' | 'hard' }>) => {
+    try {
+      set({ error: null });
+      const updatedCard = await flashcardsService.updateCard(deckId, cardId, updates);
+      set((state) => ({
+        decks: state.decks.map((deck) => {
+          if (deck.id !== deckId) return deck;
+          return {
+            ...deck,
+            cards: deck.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+          };
+        }),
+        selectedDeck:
+          state.selectedDeck?.id === deckId
+            ? {
+                ...state.selectedDeck,
+                cards: state.selectedDeck.cards.map((c) => (c.id === cardId ? updatedCard : c)),
+              }
+            : state.selectedDeck,
+      }));
+      return updatedCard;
     } catch (error) {
       set({ error: (error as Error).message });
       throw error;

@@ -145,6 +145,50 @@ type StudyServiceResponse = {
   }>;
 };
 
+type StudyMediaServiceResponse = {
+  transcript: string;
+  summary: {
+    tldr: string[];
+    keyPoints: string[];
+    actionItems: string[];
+  };
+};
+
+type BotTranscriptLine = {
+  seq: number;
+  text: string;
+  speaker: string | null;
+  timestamp: string;
+};
+
+type BotTranscriptResponse = {
+  lines?: BotTranscriptLine[];
+};
+
+const DEFAULT_STUDY_BACKEND_URL = 'https://studysnapaddonbackend-production-45ff.up.railway.app';
+
+function normalizeExternalBaseUrl(value?: string | null) {
+  const trimmed = String(value ?? '').trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const withProtocol =
+    trimmed.startsWith('http://') || trimmed.startsWith('https://') ? trimmed : `https://${trimmed}`;
+
+  try {
+    const parsed = new URL(withProtocol);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+
+    const normalizedPath = parsed.pathname.replace(/\/+$/, '');
+    return `${parsed.origin}${normalizedPath === '/' ? '' : normalizedPath}`;
+  } catch {
+    return null;
+  }
+}
+
 async function findAuthUserByEmail(email: string) {
   const admin = createSupabaseAdminClient();
   let page = 1;
@@ -381,7 +425,7 @@ async function sendOtpEmail(email: string, purpose: OtpPurpose, otp: string) {
     throw new Error('Missing RESEND_API_KEY or OTP_FROM_EMAIL environment variables.');
   }
 
-  const actionText = purpose === 'register' ? 'finish your StudySnap sign up' : 'sign in to StudySnap';
+  const actionText = purpose === 'register' ? 'finish your VICHEA sign up' : 'sign in to VICHEA';
   const send = async (from: string) =>
     fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -392,7 +436,7 @@ async function sendOtpEmail(email: string, purpose: OtpPurpose, otp: string) {
       body: JSON.stringify({
         from,
         to: [email],
-        subject: 'Your StudySnap OTP Code',
+        subject: 'Your VICHEA OTP Code',
         html: `<p>Use this code to ${actionText}:</p><p style=\"font-size: 24px; font-weight: 700; letter-spacing: 2px;\">${otp}</p><p>This code expires in 10 minutes.</p>`,
       }),
     });
@@ -658,6 +702,35 @@ function decodeTranscriptBlob(raw: string) {
     return '';
   }
 
+  try {
+    const parsed = JSON.parse(normalized) as unknown;
+    if (Array.isArray(parsed)) {
+      const lines = parsed
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') {
+            return '';
+          }
+
+          const record = entry as Record<string, unknown>;
+          const text = String(record.text ?? '').trim();
+          if (!text) {
+            return '';
+          }
+
+          const speakerValue = record.speaker ?? record.speaker_name ?? null;
+          const speaker = typeof speakerValue === 'string' ? speakerValue.trim() : '';
+          return speaker ? `${speaker}: ${text}` : text;
+        })
+        .filter(Boolean);
+
+      if (lines.length > 0) {
+        return lines.join('\n');
+      }
+    }
+  } catch {
+    // Fall through to the legacy blob parser.
+  }
+
   const lines = normalized.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
   if (lines.length === 0) {
     return '';
@@ -710,17 +783,27 @@ function decodeBlobField(value: string) {
 }
 
 function getStudyServiceBaseUrl() {
-  const configured =
-    process.env.STUDY_BACKEND_URL?.trim() ||
-    process.env.BACKEND_API_URL?.trim() ||
-    process.env.NEXT_PUBLIC_STUDY_BACKEND_URL?.trim() ||
-    '';
+  const candidates = [
+    process.env.STUDY_BACKEND_URL,
+    process.env.BACKEND_API_URL,
+    process.env.NEXT_PUBLIC_STUDY_BACKEND_URL,
+    DEFAULT_STUDY_BACKEND_URL,
+  ];
 
-  if (!configured) {
-    return null;
+  for (const candidate of candidates) {
+    const normalized = normalizeExternalBaseUrl(candidate);
+    if (normalized) {
+      return normalized;
+    }
   }
 
-  return configured.replace(/\/+$/, '');
+  return null;
+}
+
+function allowLocalMeetingSummaryFallback() {
+  return String(process.env.MEETING_NOTES_ALLOW_LOCAL_FALLBACK ?? '')
+    .trim()
+    .toLowerCase() === 'true';
 }
 
 function extractBotIdFromRecordingUrl(recordingUrl: string | null | undefined) {
@@ -766,6 +849,76 @@ async function generateStudyArtifactsViaBackend(input: {
   }
 
   return (await response.json()) as StudyServiceResponse;
+}
+
+async function transcribeMediaViaBackend(input: {
+  mediaBase64: string;
+  mimeType: string;
+  title: string;
+}) {
+  const baseUrl = getStudyServiceBaseUrl();
+  if (!baseUrl) {
+    return null;
+  }
+
+  const response = await fetch(`${baseUrl}/api/study/media`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      mediaBase64: input.mediaBase64,
+      mimeType: input.mimeType,
+      title: input.title,
+    }),
+  });
+
+  if (!response.ok) {
+    const message = await response.text().catch(() => '');
+    throw new Error(message || `Media transcription failed (${response.status}).`);
+  }
+
+  return (await response.json()) as StudyMediaServiceResponse;
+}
+
+async function fetchTranscriptViaBackend(botId: string): Promise<string> {
+  const baseUrl = getStudyServiceBaseUrl();
+  if (!baseUrl || !botId.trim()) {
+    return '';
+  }
+
+  const response = await fetch(
+    `${baseUrl}/api/bot/transcript?botId=${encodeURIComponent(botId)}&sinceSeq=0`,
+    {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    return '';
+  }
+
+  const payload = (await response.json().catch(() => ({}))) as BotTranscriptResponse;
+  const lines = Array.isArray(payload.lines) ? payload.lines : [];
+  if (lines.length === 0) {
+    return '';
+  }
+
+  return lines
+    .map((line) => {
+      const text = String(line.text ?? '').trim();
+      if (!text) {
+        return '';
+      }
+
+      const speaker = String(line.speaker ?? '').trim();
+      return speaker ? `${speaker}: ${text}` : text;
+    })
+    .filter(Boolean)
+    .join('\n');
 }
 
 async function createSession(db: DbClient, userId: string) {
@@ -1642,19 +1795,19 @@ async function handleFlashcards(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptSource = decodeTranscriptBlob(meeting.transcript);
-    if (!transcriptSource) {
-      return errorResponse('This meeting has no transcript to summarize.', 400);
+    const summarySource = String(meeting.ai_notes ?? '').trim();
+    if (!summarySource) {
+      return errorResponse('This meeting has no AI note summary yet. Generate meeting notes first.', 400);
     }
 
     const maxCards = Math.min(30, Math.max(5, Number.isFinite(maxCardsRaw) ? maxCardsRaw : 12));
-    let summary = buildSummary(transcriptSource);
-    let keyPoints = extractKeywords(transcriptSource, 5);
-    let generatedCards = buildFlashcardsFromText(transcriptSource, maxCards);
+    let summary = buildSummary(summarySource);
+    let keyPoints = extractKeywords(summarySource, 5);
+    let generatedCards = buildFlashcardsFromText(summarySource, maxCards);
 
     try {
       const study = await generateStudyArtifactsViaBackend({
-        transcriptText: transcriptSource,
+        transcriptText: summarySource,
         title: requestedTitle || meeting.title,
         flashcardCount: maxCards,
         botId: extractBotIdFromRecordingUrl(meeting.recording_url),
@@ -2018,6 +2171,30 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
+    if (!String(meeting.transcript ?? '').trim()) {
+      const botId = extractBotIdFromRecordingUrl(meeting.recordingUrl ?? null);
+      if (botId) {
+        const hydratedTranscript = await fetchTranscriptViaBackend(botId);
+        if (hydratedTranscript) {
+          const { error: updateError } = await db
+            .from('meetings')
+            .update({
+              transcript: hydratedTranscript,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', meetingId)
+            .eq('user_id', authContext.user.id);
+
+          if (!updateError) {
+            return json({
+              ...meeting,
+              transcript: hydratedTranscript,
+            });
+          }
+        }
+      }
+    }
+
     return json(meeting);
   }
 
@@ -2067,36 +2244,73 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptSource = String(meeting.transcript || '').trim();
+    const meetingRow = await db
+      .from('meetings')
+      .select('recording_url')
+      .eq('id', meetingId)
+      .eq('user_id', authContext.user.id)
+      .maybeSingle<{ recording_url: string | null }>();
+
+    const botId = extractBotIdFromRecordingUrl(meetingRow.data?.recording_url);
+    let transcriptSource = String(meeting.transcript || '').trim();
+
+    if (!transcriptSource && botId) {
+      const hydratedTranscript = await fetchTranscriptViaBackend(botId);
+      if (hydratedTranscript) {
+        transcriptSource = hydratedTranscript;
+
+        await db
+          .from('meetings')
+          .update({
+            transcript: hydratedTranscript,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', meetingId)
+          .eq('user_id', authContext.user.id);
+      }
+    }
+
+    if (!transcriptSource) {
+      return errorResponse('Transcript is not available yet. Please wait a moment and try again.', 409);
+    }
+
     let summary = buildSummary(transcriptSource || meeting.title);
     let keyPoints = extractKeywords(transcriptSource || meeting.title, 5);
     let actionItems = keyPoints.map((point) => `Review ${point}`);
     let tags = keyPoints.slice(0, 4);
+    let provider: 'vertex' | 'fallback' = 'fallback';
 
     try {
-      const meetingRow = await db
-        .from('meetings')
-        .select('recording_url')
-        .eq('id', meetingId)
-        .eq('user_id', authContext.user.id)
-        .maybeSingle<{ recording_url: string | null }>();
-
       const study = await generateStudyArtifactsViaBackend({
         transcriptText: transcriptSource,
         title: meeting.title,
         flashcardCount: 12,
-        botId: extractBotIdFromRecordingUrl(meetingRow.data?.recording_url),
+        botId,
         userId: authContext.user.id,
       });
 
-      if (study) {
-        summary = study.summary.tldr.join(' ').trim() || summary;
-        keyPoints = study.summary.keyPoints.length > 0 ? study.summary.keyPoints : keyPoints;
-        actionItems = study.summary.actionItems.length > 0 ? study.summary.actionItems : actionItems;
-        tags = [...new Set(study.flashcards.flatMap((card) => card.tags).map((tag) => String(tag).trim()).filter(Boolean))].slice(0, 8);
+      if (!study) {
+        throw new Error('Study backend URL is not configured. Set STUDY_BACKEND_URL or BACKEND_API_URL.');
       }
-    } catch {
-      // Keep local fallback generation if backend study service is unavailable.
+
+      provider = 'vertex';
+      summary = study.summary.tldr.join(' ').trim() || summary;
+      keyPoints = study.summary.keyPoints.length > 0 ? study.summary.keyPoints : keyPoints;
+      actionItems = study.summary.actionItems.length > 0 ? study.summary.actionItems : actionItems;
+      tags = [...new Set(study.flashcards.flatMap((card) => card.tags).map((tag) => String(tag).trim()).filter(Boolean))].slice(0, 8);
+    } catch (error) {
+      if (!allowLocalMeetingSummaryFallback()) {
+        const message = error instanceof Error ? error.message : String(error);
+        const urlHint =
+          /failed to parse url|invalid url/i.test(message)
+            ? ' STUDY_BACKEND_URL must include protocol, for example https://your-backend.up.railway.app.'
+            : '';
+        return errorResponse(
+          `Vertex summary generation failed. ${message}.${urlHint} Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
+          502
+        );
+      }
+      // Optional local fallback can be enabled with MEETING_NOTES_ALLOW_LOCAL_FALLBACK=true.
     }
 
     const notes = `${summary}\n\nKey points:\n- ${keyPoints.join('\n- ')}\n\nAction items:\n- ${actionItems.join('\n- ')}`;
@@ -2115,32 +2329,93 @@ async function handleMeetings(request: NextRequest, segments: string[]) {
       return errorResponse(error?.message ?? 'Failed to generate meeting notes.', 500);
     }
 
-    return json({ summary, keyPoints, actionItems, tags });
+    return json({ summary, keyPoints, actionItems, tags, provider });
   }
 
   if (meetingId && segments[2] === 'upload' && request.method === 'POST') {
     const formData = await request.formData();
-    const recording = formData.get('recording');
+    const media = formData.get('media') ?? formData.get('recording');
 
-    if (!(recording instanceof File)) {
-      return errorResponse('Recording file is required.', 400);
+    if (!(media instanceof File)) {
+      return errorResponse('Audio or video file is required.', 400);
     }
 
-    const recordingUrl = `/uploads/${meetingId}/${recording.name}`;
-    const { error } = await db
+    const mimeType = String(media.type ?? '').trim().toLowerCase();
+    if (!/^(audio|video)\//.test(mimeType)) {
+      return errorResponse('Only audio or video files are supported.', 400);
+    }
+
+    const meeting = await getMeetingById(db, authContext.user.id, meetingId);
+    if (!meeting) {
+      return errorResponse('Meeting not found.', 404);
+    }
+
+    const mediaBase64 = Buffer.from(await media.arrayBuffer()).toString('base64');
+    if (!mediaBase64) {
+      return errorResponse('Uploaded media file is empty.', 400);
+    }
+
+    const mediaStudy = await transcribeMediaViaBackend({
+      mediaBase64,
+      mimeType,
+      title: meeting.title,
+    });
+
+    if (!mediaStudy) {
+      return errorResponse('Study backend URL is not configured. Set STUDY_BACKEND_URL or BACKEND_API_URL.', 500);
+    }
+
+    const summaryText = mediaStudy.summary.tldr.join(' ').trim() || buildSummary(mediaStudy.transcript);
+    const keyPoints = mediaStudy.summary.keyPoints.length > 0
+      ? mediaStudy.summary.keyPoints
+      : extractKeywords(mediaStudy.transcript, 5);
+    const actionItems = mediaStudy.summary.actionItems.length > 0
+      ? mediaStudy.summary.actionItems
+      : keyPoints.map((point) => `Review ${point}`);
+    const notesText = `${summaryText}\n\nKey points:\n- ${keyPoints.join('\n- ')}\n\nAction items:\n- ${actionItems.join('\n- ')}`;
+
+    const recordingUrl = `/uploads/${meetingId}/${media.name}`;
+    const { error: meetingError } = await db
       .from('meetings')
       .update({
+        transcript: mediaStudy.transcript,
+        ai_notes: notesText,
         recording_url: recordingUrl,
         updated_at: new Date().toISOString(),
       })
       .eq('id', meetingId)
       .eq('user_id', authContext.user.id);
 
-    if (error) {
-      return errorResponse(error.message, 500);
+    if (meetingError) {
+      return errorResponse(meetingError.message, 500);
     }
 
-    return json({ recordingUrl });
+    const timestamp = new Date().toISOString();
+    const noteTitle = `${meeting.title} - AI Notes`;
+    const { data: insertedNote, error: noteError } = await db
+      .from('notes')
+      .insert({
+        user_id: authContext.user.id,
+        title: noteTitle,
+        content: notesText,
+        tags: ['meeting-summary', 'vertex-upload'],
+        is_shared: false,
+        shared_with: [],
+        created_at: timestamp,
+        updated_at: timestamp,
+      })
+      .select('*')
+      .single<NoteRow>();
+
+    if (noteError || !insertedNote) {
+      return errorResponse(humanizeDbError(noteError?.message), dbErrorStatus(noteError?.message));
+    }
+
+    return json({
+      recordingUrl,
+      note: toNote(insertedNote),
+      provider: 'vertex',
+    });
   }
 
   return errorResponse('Not found', 404);
@@ -2262,9 +2537,42 @@ async function handleAi(request: NextRequest, segments: string[]) {
       return errorResponse('Meeting not found.', 404);
     }
 
-    const transcriptText = decodeTranscriptBlob(meeting.transcript);
-    const notes = buildSummary(transcriptText || meeting.title);
-    return json({ notes });
+    const transcriptText = decodeTranscriptBlob(meeting.transcript).trim();
+    if (!transcriptText) {
+      return errorResponse('Transcript is not available yet. Please wait a moment and try again.', 409);
+    }
+
+    try {
+      const study = await generateStudyArtifactsViaBackend({
+        transcriptText,
+        title: meeting.title,
+        flashcardCount: 12,
+        botId: extractBotIdFromRecordingUrl(meeting.recording_url),
+        userId: authContext.user.id,
+      });
+
+      if (!study) {
+        throw new Error('Study backend URL is not configured. Set STUDY_BACKEND_URL or BACKEND_API_URL.');
+      }
+
+      const notes = `${study.summary.tldr.join(' ').trim()}\n\nKey points:\n- ${study.summary.keyPoints.join('\n- ')}\n\nAction items:\n- ${study.summary.actionItems.join('\n- ')}`;
+      return json({ notes, provider: 'vertex' });
+    } catch (error) {
+      if (!allowLocalMeetingSummaryFallback()) {
+        const message = error instanceof Error ? error.message : String(error);
+        const urlHint =
+          /failed to parse url|invalid url/i.test(message)
+            ? ' STUDY_BACKEND_URL must include protocol, for example https://your-backend.up.railway.app.'
+            : '';
+        return errorResponse(
+          `Vertex summary generation failed. ${message}.${urlHint} Set STUDY_BACKEND_URL and ensure backend Vertex env is configured.`,
+          502
+        );
+      }
+
+      const notes = buildSummary(transcriptText || meeting.title);
+      return json({ notes, provider: 'fallback' });
+    }
   }
 
   if (segments[1] === 'ask' && request.method === 'POST') {

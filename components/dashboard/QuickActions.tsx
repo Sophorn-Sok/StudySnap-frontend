@@ -28,10 +28,10 @@ export const QuickActions = () => {
     <div className="mb-8">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        <QuickAction icon={BookOpen} label="Create Note" href="/notes/new" />
+        <QuickAction icon={BookOpen} label="Create Note" href="/notes" />
         <QuickAction icon={Wand2} label="Generate Flashcards" href="/flashcards" />
         <QuickAction icon={Mic} label="Start Transcription" href="/meetings" />
-        <QuickAction icon={Upload} label="Upload Recording" href="#" />
+        <QuickAction icon={Upload} label="Upload Audio" href="/meetings" />
       </div>
     </div>
   );

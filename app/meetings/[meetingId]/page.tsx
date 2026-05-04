@@ -44,14 +44,7 @@ function toTranscriptEntries(text: string): TranscriptEntry[] {
     .map((line) => line.trim())
     .filter(Boolean);
 
-  const lines = sourceLines.length > 1
-    ? sourceLines
-    : normalized
-        .split(/(?<=[.!?])\s+/)
-        .map((line) => line.trim())
-        .filter(Boolean);
-
-  return lines.map((line, index) => {
+  return sourceLines.map((line, index) => {
     const matched = line.match(/^([^:]{1,24}):\s*(.+)$/);
     const speaker = matched ? matched[1] : `Speaker ${(index % 2) + 1}`;
     const textContent = matched ? matched[2] : line;
@@ -280,7 +273,7 @@ export default function MeetingTranscriptPage() {
                             <span className="text-sm font-semibold text-gray-900">{entry.speaker}</span>
                             <span className="text-xs tabular-nums text-gray-400">{entry.timestamp}</span>
                           </div>
-                          <p className="text-sm leading-relaxed text-gray-600">{entry.text}</p>
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-gray-600">{entry.text}</p>
                         </div>
                       </div>
                     ))

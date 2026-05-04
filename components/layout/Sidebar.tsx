@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ROUTES } from '@/utils/constants';
+import { Logo } from '../ui/Logo';
 import {
-  Sparkles,
   LayoutDashboard,
   FileText,
   BrainCircuit,
@@ -71,10 +71,7 @@ export const Sidebar = () => {
   return (
     <div className="w-full flex flex-col p-6 h-full font-sans bg-white">
       <div className="flex items-center gap-2 mb-10">
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-200">
-          <Sparkles size={18} />
-        </div>
-        <span className="font-bold text-xl tracking-tight text-gray-900">StudySnap</span>
+        <Logo size="md" />
       </div>
 
       <nav className="flex-1">

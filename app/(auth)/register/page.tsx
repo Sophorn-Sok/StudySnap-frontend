@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useState } from 'react';
 import Link from 'next/link';
+import { Logo } from '../../../components/ui/Logo';
 import { useAuthStore } from '@/store';
 import {
   Sparkles,
@@ -69,97 +70,103 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left Side - Feature Section */}
-      <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-blue-900 via-blue-800 to-purple-900 p-12 text-white">
-        <div>
-          <Link href="/" className="flex items-center gap-2 mb-16 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-blue-400 rounded-lg flex items-center justify-center">
-              <Sparkles size={24} />
-            </div>
-            <span className="text-2xl font-bold">StudySnap</span>
-          </Link>
+      <div className="hidden lg:flex flex-col justify-between p-12 text-white relative overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <img src="/image.jpg" alt="Background" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-900/95 via-blue-800/90 to-purple-900/95 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-blue-900/20"></div>
+        </div>
 
-          <h2 className="text-4xl lg:text-5xl font-bold mb-4">AI-Powered Learning Workspace</h2>
-          <p className="text-blue-100 mb-12 text-lg">
-            Capture meetings, organize knowledge, and study smarter with intelligent flashcards.
-          </p>
+        <div className="relative z-10 flex flex-col justify-between h-full">
+          <div>
+            <Link href="/" className="flex items-center gap-2 mb-16 hover:opacity-80 transition-opacity">
+              <Logo size="xl" variant="light" />
+            </Link>
 
-          {/* Features List */}
-          <div className="space-y-6">
-            {/* AI Summary */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-400 bg-opacity-20">
-                  <Sparkles size={24} className="text-blue-300" />
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4">AI-Powered Learning Workspace</h2>
+            <p className="text-blue-100 mb-12 text-lg">
+              Capture meetings, organize knowledge, and study smarter with intelligent flashcards.
+            </p>
+
+            {/* Features List */}
+            <div className="space-y-6">
+              {/* AI Summary */}
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10">
+                    <Sparkles size={24} className="text-blue-300" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">AI Summary</h3>
+                  <p className="text-blue-100">Get instant summaries of your notes and meetings</p>
                 </div>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-1">AI Summary</h3>
-                <p className="text-blue-100">Get instant summaries of your notes and meetings</p>
-              </div>
-            </div>
 
-            {/* AI Meeting Notes */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-400 bg-opacity-20">
-                  <MessageCircle size={24} className="text-blue-300" />
+              {/* AI Meeting Notes */}
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10">
+                    <MessageCircle size={24} className="text-blue-300" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">AI Meeting Notes</h3>
+                  <p className="text-blue-100">
+                    Automatically transcribe Zoom and Google Meet conversations and generate structured summaries.
+                  </p>
                 </div>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-1">AI Meeting Notes</h3>
-                <p className="text-blue-100">
-                  Automatically transcribe Zoom and Google Meet conversations and generate structured summaries.
-                </p>
-              </div>
-            </div>
 
-            {/* Smart Notes Organization */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-400 bg-opacity-20">
-                  <FileText size={24} className="text-blue-300" />
+              {/* Smart Notes Organization */}
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10">
+                    <FileText size={24} className="text-blue-300" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">Smart Notes Organization</h3>
+                  <p className="text-blue-100">
+                    Create rich-text notes with folders, tags, and powerful search to organize your knowledge.
+                  </p>
                 </div>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-1">Smart Notes Organization</h3>
-                <p className="text-blue-100">
-                  Create rich-text notes with folders, tags, and powerful search to organize your knowledge.
-                </p>
-              </div>
-            </div>
 
-            {/* Flashcard Learning System */}
-            <div className="flex gap-4">
-              <div className="flex-shrink-0">
-                <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-blue-400 bg-opacity-20">
-                  <Zap size={24} className="text-blue-300" />
+              {/* Flashcard Learning System */}
+              <div className="flex gap-4">
+                <div className="flex-shrink-0">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-lg bg-white/10 backdrop-blur-sm border border-white/10">
+                    <Zap size={24} className="text-blue-300" />
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-1">Flashcard Learning System</h3>
-                <p className="text-blue-100">
-                  Convert notes and meeting transcripts into flashcards with spaced repetition learning.
-                </p>
+                <div>
+                  <h3 className="text-xl font-semibold mb-1">Flashcard Learning System</h3>
+                  <p className="text-blue-100">
+                    Convert notes and meeting transcripts into flashcards with spaced repetition learning.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Bottom Trust Section */}
-        <div className="border-t border-blue-400 border-opacity-30 pt-8">
-          <p className="text-blue-100 text-sm mb-4">Trusted by students and professionals</p>
-          <div className="flex gap-6">
-            <div className="flex items-center gap-2">
-              <Users size={20} />
-              <span className="text-sm">Students</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <BookOpen size={20} />
-              <span className="text-sm">Study groups</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Lock size={20} />
-              <span className="text-sm">Remote teams</span>
+          {/* Bottom Trust Section */}
+          <div className="border-t border-white/20 pt-8">
+            <p className="text-blue-100 text-sm mb-4">Trusted by students and professionals</p>
+            <div className="flex gap-6">
+              <div className="flex items-center gap-2">
+                <Users size={20} />
+                <span className="text-sm">Students</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <BookOpen size={20} />
+                <span className="text-sm">Study groups</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Lock size={20} />
+                <span className="text-sm">Remote teams</span>
+              </div>
             </div>
           </div>
         </div>
@@ -169,7 +176,7 @@ export default function RegisterPage() {
       <div className="flex flex-col items-center justify-center p-6 lg:p-12 bg-gray-50 lg:bg-white">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Sign up to StudySnap</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">Sign up to VICHEA</h1>
             <p className="text-gray-600">Access your notes, meetings, and flashcards.</p>
           </div>
 
@@ -272,8 +279,8 @@ export default function RegisterPage() {
                   </p>
                 )}
 
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   isLoading={isLoading || isRequestingOtp}
                   className="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition-colors"
                 >

@@ -45,7 +45,7 @@ export default function DashboardPage() {
   }, [fetchNotes, fetchDecks, fetchMeetings]);
 
   const userName =
-    `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.username || 'StudySnap User';
+    `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim() || user?.username || 'VICHEA User';
 
   const meetingsToday = useMemo(() => {
     const today = new Date();
