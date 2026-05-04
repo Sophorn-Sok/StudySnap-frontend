@@ -2,8 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle2, Clock, Plus, Save, Search, Trash2, BookOpen } from 'lucide-react';
+import { CheckCircle2, Clock, Plus, Save, Search, Trash2, BookOpen, Share2 } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { ShareNoteModal } from './ShareNoteModal';
 import { useNotesStore } from '@/store';
 import { useMeetingsStore } from '@/store';
 import { getRelativeTime } from '@/utils/helpers';
@@ -24,6 +25,7 @@ export default function NotesPageContent() {
     updateNote,
     deleteNote,
     setSelectedNote,
+    shareNote,
   } = useNotesStore();
 
   const {
@@ -42,6 +44,8 @@ export default function NotesPageContent() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedItemType, setSelectedItemType] = useState<'note' | 'meeting' | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     void fetchNotes();
@@ -157,6 +161,39 @@ export default function NotesPageContent() {
     }
   };
 
+  const handleShare = async (userIds: string[]) => {
+    if (!selectedItemId) return;
+
+    setIsSharing(true);
+    setLocalError(null);
+
+    try {
+      if (selectedItemType === 'meeting') {
+        // Convert meeting to a note and share it
+        const meeting = meetings.find(m => m.id === selectedItemId);
+        if (!meeting) throw new Error('Meeting not found');
+        
+        const noteTitle = `${meeting.title} - AI Summary`;
+        const noteContent = meeting.aiNotes || meeting.title;
+        
+        // Create note from meeting
+        const note = await createNote(noteTitle, noteContent, ['meeting-summary']);
+        // Share the created note
+        await shareNote(note.id, userIds);
+        
+        setLocalError(null);
+      } else {
+        // Share regular note
+        await shareNote(selectedItemId, userIds);
+      }
+    } catch (shareError) {
+      setLocalError((shareError as Error).message);
+      throw shareError;
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden font-sans text-slate-800">
       <aside className="flex h-full w-full max-w-sm shrink-0 flex-col border-r border-slate-200 bg-white p-5">
@@ -259,12 +296,17 @@ export default function NotesPageContent() {
                   <Trash2 size={14} /> {isReadOnly ? 'Delete Summary' : 'Delete'}
                 </Button>
                 {!isReadOnly && (
-                  <>
-                    <Button size="sm" onClick={handleSaveNote} isLoading={isSaving}>
-                      <Save size={14} /> Save
-                    </Button>
-                  </>
+                  <Button size="sm" onClick={handleSaveNote} isLoading={isSaving}>
+                    <Save size={14} /> Save
+                  </Button>
                 )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShareModalOpen(true)}
+                >
+                  <Share2 size={14} /> Share
+                </Button>
               </div>
             </div>
 
@@ -303,6 +345,38 @@ export default function NotesPageContent() {
                 />
               </div>
 
+              {selectedItemType === 'note' && (
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Shared With
+                  </label>
+                  <div className="min-h-9">
+                    {(notes.find(n => n.id === selectedItemId)?.sharedWith ?? []).length === 0 ? (
+                      <p className="text-sm text-slate-500 italic">Not shared with anyone</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {(notes.find(n => n.id === selectedItemId)?.sharedWith ?? []).map((userId) => (
+                          <span
+                            key={userId}
+                            className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1 rounded-full text-sm font-mono"
+                          >
+                            {userId}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {selectedItemType === 'meeting' && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+                  <p className="text-sm text-amber-700">
+                    💡 <strong>Tip:</strong> Click "Share" to convert this meeting summary to a note and share it with others.
+                  </p>
+                </div>
+              )}
+
               <p className="text-xs text-slate-400">
                 Created {new Date(displayItems.find(i => i.id === selectedItemId)?.createdAt ?? new Date()).toLocaleString()} · Updated {new Date(displayItems.find(i => i.id === selectedItemId)?.updatedAt ?? new Date()).toLocaleString()}
               </p>
@@ -310,6 +384,29 @@ export default function NotesPageContent() {
           </div>
         )}
       </main>
+
+      <ShareNoteModal
+        open={shareModalOpen}
+        onOpenChange={setShareModalOpen}
+        note={selectedItemType === 'meeting' 
+          ? (meetings.find(m => m.id === selectedItemId) 
+              ? {
+                  id: selectedItemId || '',
+                  userId: '',
+                  title: meetings.find(m => m.id === selectedItemId)?.title || '',
+                  content: meetings.find(m => m.id === selectedItemId)?.aiNotes || '',
+                  tags: [],
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  isShared: false,
+                } 
+              : null)
+          : (notes.find(n => n.id === selectedItemId) ?? null)
+        }
+        itemType={selectedItemType || 'note'}
+        onShare={handleShare}
+        isLoading={isSharing}
+      />
     </div>
   );
 }
